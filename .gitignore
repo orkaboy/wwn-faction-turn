@@ -4,5 +4,8 @@ __pycache__
 # Config files
 imgui.ini
 
+# Logs
+Logs
+
 # Ruff output
 report.json
