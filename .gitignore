@@ -3,6 +3,7 @@ __pycache__
 
 # Config files
 imgui.ini
+config.yaml
 
 # Logs
 Logs
