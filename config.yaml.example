@@ -1,0 +1,12 @@
+# User Interface
+ui:
+  width           : 480       # Set the GUI width in pixels.
+  height          : 800       # Set the GUI height in pixels.
+  vsync           : True      # Caps framerate at monitor refresh rate.
+
+# Logging
+logging:
+  color_log       : True      # Colors the console output. May not work on some systems.
+  verbosity       : DEBUG     # Verbosity of log messages in the console.
+                              # Valid log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+                              # Log files are also written to the Logs folder.
