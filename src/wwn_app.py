@@ -5,6 +5,7 @@ from imgui_bundle import imgui
 from src.app import App
 from src.asset import Asset
 from src.faction import Faction, MagicLevel
+from src.layout_helper import LayoutHelper
 
 # Temp
 from src.system import CUNNING, TAGS
@@ -38,9 +39,16 @@ class WwnApp(App):
         imgui.set_window_pos("Factions", imgui.ImVec2(5, 5), imgui.Cond_.first_use_ever)
         imgui.set_window_size(imgui.ImVec2(240, 410), cond=imgui.Cond_.first_use_ever)
 
+        rm_faction = -1
         for idx, faction in enumerate(self.factions):
-            faction.render(idx)
-            faction.deferred_remove()
-        self.factions = [faction for faction in self.factions if faction.remove is False]
+            header_open, visible = imgui.collapsing_header(f"{faction.name}##{idx}", True, flags=0)
+            if header_open and visible:
+                faction.render(idx)
+                # Remove button
+                if imgui.button(f"Remove Faction##{idx}"):
+                    rm_faction = idx
+                LayoutHelper.add_spacer()
+        if rm_faction >= 0:
+            self.factions.pop(rm_faction)
 
         imgui.end()

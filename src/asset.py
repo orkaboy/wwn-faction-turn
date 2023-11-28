@@ -3,6 +3,8 @@ from typing import Self
 
 from imgui_bundle import imgui
 
+from src.quality import Quality
+
 
 class AssetType(Enum):
     """AssetType enumeration."""
@@ -38,12 +40,17 @@ class AssetStats:
         upkeep: int = 0,
         atk_type: AssetType = None,
         def_type: AssetType = None,
+        qualities: list[Quality] = None,
     ) -> None:
         """Initialize AssetStats object."""
         self.max_hp = max_hp
         self.upkeep = upkeep
         self.atk_type = atk_type
         self.def_type = def_type
+        if qualities:
+            self.qualities = qualities
+        else:
+            self.qualities = []
 
 
 class AssetStrings:
@@ -107,11 +114,13 @@ class Asset:
         self.uuid: str = ""
         self.prototype = prototype
         self.hp: int = prototype.stats.max_hp
-        self.remove: bool = False
+        self.qualities: list[Quality] = []
+        if prototype.stats.qualities:
+            self.qualities.extend(prototype.stats.qualities)
 
     def render(self: Self, idx: str) -> None:
         """Render asset in GUI."""
-        imgui.text(label=self.prototype.strings.name)
+        imgui.text(self.prototype.strings.name)
         # TODO(orkaboy): Multiline?
         _, self.desc = imgui.input_text(label=f"Description##{idx}", str=self.desc)
         _, self.hp = imgui.input_int(label=f"HP##{idx}", v=self.hp)
@@ -122,6 +131,16 @@ class Asset:
         imgui.text_wrapped(self.prototype.strings.rules)
         if self.prototype.stats.upkeep:
             imgui.text(f"Upkeep: {self.prototype.stats.upkeep}")
-        # Remove button
-        if imgui.button(f"Remove Asset##{idx}"):
-            self.remove = True
+        # Qualities
+        imgui.text("Qualities:")
+        if len(self.qualities) > 0:
+            rm_quality = -1
+            for q_idx, quality in enumerate(self.qualities):
+                imgui.same_line()
+                imgui.text(quality.name)
+                imgui.same_line()
+                if imgui.button(f"X##{idx}_{q_idx}", size=imgui.ImVec2(16, 16)):
+                    rm_quality = q_idx
+            if rm_quality >= 0:
+                self.qualities.pop(rm_quality)
+        # TODO(orkaboy): Button to add new Quality to Asset.

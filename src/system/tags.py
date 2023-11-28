@@ -1,5 +1,6 @@
 from typing import Self
 
+from src.mapper import get_class_values
 from src.tag import TagPrototype
 
 
@@ -156,3 +157,11 @@ class TAGS:
     Supported = Supported()
     Tenacious = Tenacious()
     Zealot = Zealot()
+
+
+_tags = get_class_values(TAGS)
+
+
+def tags_list() -> list[TagPrototype]:
+    """Return list of all Tags."""
+    return _tags

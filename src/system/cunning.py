@@ -8,6 +8,8 @@ from src.asset import (
     AssetType,
     MagicLevel,
 )
+from src.mapper import get_class_values
+from src.system.qualities import QUALITY
 
 
 # TIER 1 CUNNING ASSETS
@@ -30,6 +32,7 @@ class Informers(AssetPrototype):
                 max_hp=3,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
+                qualities=[QUALITY.Subtle],
             ),
         )
 
@@ -52,6 +55,7 @@ class PettySeers(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=2,
+                qualities=[QUALITY.Subtle],
             ),
         )
 
@@ -70,3 +74,11 @@ class CUNNING:
     # TIER 6 CUNNING ASSETS
     # TIER 7 CUNNING ASSETS
     # TIER 8 CUNNING ASSETS
+
+
+_assets = get_class_values(CUNNING)
+
+
+def cunning_list() -> list[AssetPrototype]:
+    """Return list of all Cunning Assets."""
+    return _assets
