@@ -1,21 +1,11 @@
-from enum import Enum
 from random import randint
 from typing import Self
 
 from imgui_bundle import imgui
 
-from src.asset import Asset, AssetType
+from src.asset import Asset, AssetType, MagicLevel
 from src.layout_helper import LayoutHelper
 from src.tag import Tag
-
-
-class MagicLevel(Enum):
-    """Initialize MagicLevel object."""
-
-    NONE = 0
-    LOW = 1
-    MEDIUM = 2
-    HIGH = 3
 
 
 class Faction:
@@ -54,6 +44,8 @@ class Faction:
         self.assets: list[Asset] = []
         # Tags tracking
         self.tags: list[Tag] = []
+        # Remove flag
+        self.remove = False
 
     def max_hp(self: Self) -> int:
         """Calculate faction max hp."""
@@ -66,6 +58,18 @@ class Faction:
     def roll_initiative(self: Self) -> int:
         """At the start of every faction turn, each faction rolls 1d8 for initiative, the highest rolls going first."""  # noqa: E501
         return randint(1, 8)
+
+    def roll_attribute(self: Self, attribute: AssetType) -> int:
+        """Make a roll on an attribute, based on an AssetType."""
+        match attribute:
+            case AssetType.CUNNING:
+                return self.roll_cunning()
+            case AssetType.FORCE:
+                return self.roll_force()
+            case AssetType.WEALTH:
+                return self.roll_wealth()
+            case _:
+                return 0
 
     def roll_cunning(self: Self) -> int:
         """Make a 1d10 Cunning roll."""
@@ -86,14 +90,14 @@ class Faction:
 
     def assets_by_type(self: Self, asset_type: AssetType) -> list[Asset]:
         """Return a list of all asset of a certain type."""
-        return [asset for asset in self.assets if asset.type == asset_type]
+        return [asset for asset in self.assets if asset.prototype.type == asset_type]
 
     def asset_upkeep(self: Self) -> int:
         """The faction must pay any upkeep required by their individual Asset costs."""  # noqa: D401
         upkeep = 0
         # Sum up cost of assets
         for asset in self.assets:
-            upkeep += asset.upkeep
+            upkeep += asset.upkeep()
         return upkeep
 
     def asset_excess(self: Self, asset_type: AssetType) -> int:
@@ -114,9 +118,14 @@ class Faction:
             return nr_assets - limit
         return 0
 
+    def deferred_remove(self: Self) -> None:
+        """Remove assets and tags that have been marked for removal."""
+        self.assets = [asset for asset in self.assets if asset.remove is False]
+        self.tags = [tag for tag in self.tags if tag.remove is False]
+
     def render(self: Self, idx: int) -> None:
         """Render faction in GUI."""
-        header_open, visible = imgui.collapsing_header(f"{self.name}##{idx}", True, flags=32)
+        header_open, visible = imgui.collapsing_header(f"{self.name}##{idx}", True, flags=0)
         if header_open and visible:
             _, self.name = imgui.input_text(label=f"Name##{idx}", str=self.name)
             # TODO(orkaboy): Multiline?
@@ -147,18 +156,29 @@ class Faction:
             imgui.text(f"/{self.max_hp()}")
             _, self.treasure = imgui.input_int(label=f"Treasure##{idx}", v=self.treasure)
             LayoutHelper.add_spacer()
-            # TODO(orkaboy): Render Tags
-            imgui.text("Tags")
-            for tag_idx, tag in enumerate(self.tags):
-                tag.render(f"{idx}_{tag_idx}")
+            # Render Tags
+            tags_open, tags_visible = imgui.collapsing_header(
+                f"Tags ({len(self.tags)})##{idx}",
+                True,
+                flags=32,
+            )
+            if tags_open and tags_visible:
+                for tag_idx, tag in enumerate(self.tags):
+                    tag.render(f"{idx}_{tag_idx}")
             LayoutHelper.add_spacer()
             imgui.text("Assets")
             # Render Assets
             for asset_type in [AssetType.CUNNING, AssetType.FORCE, AssetType.WEALTH]:
+                assets = self.assets_by_type(asset_type)
                 assets_open, assets_visible = imgui.collapsing_header(
-                    f"{asset_type.name}##{idx}", True, flags=32
+                    f"{asset_type.name} ({len(assets)})##{idx}",
+                    True,
+                    flags=0,
                 )
                 if assets_open and assets_visible:
-                    for asset_idx, asset in enumerate(self.assets_by_type(asset_type)):
+                    for asset_idx, asset in enumerate(assets):
                         asset.render(f"{idx}_{asset_idx}")
             LayoutHelper.add_spacer()
+            # Remove button
+            if imgui.button(f"Remove Faction##{idx}"):
+                self.remove = True

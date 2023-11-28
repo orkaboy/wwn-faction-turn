@@ -1,4 +1,3 @@
-from copy import copy
 from enum import Enum, auto
 from typing import Self
 
@@ -6,64 +5,123 @@ from imgui_bundle import imgui
 
 
 class AssetType(Enum):
+    """AssetType enumeration."""
+
     CUNNING = auto()
     FORCE = auto()
     WEALTH = auto()
 
 
-class Asset:
+class MagicLevel(Enum):
+    """MagicLevel enumeration."""
+
+    NONE = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+
+
+class AssetRequirement:
+    def __init__(
+        self: Self, tier: int, cost: int, magic_level: MagicLevel = MagicLevel.NONE
+    ) -> None:
+        """Initialize AssetRequirement object."""
+        self.tier = tier
+        self.cost = cost
+        self.magic_level = magic_level
+
+
+class AssetStats:
+    def __init__(
+        self: Self,
+        max_hp: int,
+        upkeep: int = 0,
+        atk_type: AssetType = None,
+        def_type: AssetType = None,
+    ) -> None:
+        """Initialize AssetStats object."""
+        self.max_hp = max_hp
+        self.upkeep = upkeep
+        self.atk_type = atk_type
+        self.def_type = def_type
+
+
+class AssetStrings:
     def __init__(
         self: Self,
         name: str,
         ident: str,
-        asset_type: AssetType,
         damage_formula: str,
+        counter_formula: str,
         rules: str,
-        cost: int,
-        max_hp: int,
-        upkeep: int = 0,
     ) -> None:
-        """Initialize Asset object."""
+        """Initialize AssetStrings object."""
         self.name: str = name
         self.id: str = ident
-        # Static descriptions
-        self.type = asset_type
         self.rules: str = rules
         self.damage_formula: str = damage_formula
-        # Stats (shared between all instances)
-        self.cost: int = cost
-        self.max_hp: int = max_hp
-        self.upkeep: int = upkeep
-        # Variable stats
-        self.desc: str = ""
-        self.owner: str = ""
-        self.hp: int = self.max_hp
+        self.counter_formula: str = counter_formula
 
-    def instantiate(self: Self, owner: str) -> Self:
-        """Create a unique instance from the asset prototype."""
-        asset_copy = copy(self)
-        # Assign owner and hp
-        asset_copy.owner = owner
-        self.hp: int = self.max_hp
-        return asset_copy
+
+class AssetPrototype:
+    def __init__(
+        self: Self,
+        asset_type: AssetType,
+        # Static descriptions
+        strings: AssetStrings,
+        # Stats (shared between all instances)
+        requirements: AssetRequirement,
+        stats: AssetStats,
+    ) -> None:
+        """Initialize AssetPrototype object."""
+        self.type = asset_type
+        # Static descriptions
+        self.strings = strings
+        # Stats (shared between all instances)
+        self.requirements = requirements
+        self.stats = stats
 
     def roll_damage(self: Self) -> int:
         """Need to override with asset damage formula."""
         return 0
 
+    def roll_counter(self: Self) -> int:
+        """Need to override with asset counter formula."""
+        return 0
+
+    def upkeep(self: Self) -> int:
+        """Calculate upkeep for a given asset."""
+        return self.stats.upkeep
+
+
+class Asset:
+    def __init__(
+        self: Self,
+        prototype: AssetPrototype,
+        owner: str,
+    ) -> None:
+        """Instantiate Asset object."""
+        # Variable stats
+        self.desc: str = ""
+        self.owner = owner
+        self.uuid: str = ""
+        self.prototype = prototype
+        self.hp: int = prototype.stats.max_hp
+        self.remove: bool = False
+
     def render(self: Self, idx: str) -> None:
         """Render asset in GUI."""
-        _, self.name = imgui.input_text(label="Name", str=self.name)
+        imgui.text(label=self.prototype.strings.name)
         # TODO(orkaboy): Multiline?
-        _, self.desc = imgui.input_text(label="Description", str=self.desc)
-        _, self.hp = imgui.input_int(label="HP", v=self.hp)
-        _, self.hp = imgui.input_int(label="HP", v=self.hp)
+        _, self.desc = imgui.input_text(label=f"Description##{idx}", str=self.desc)
+        _, self.hp = imgui.input_int(label=f"HP##{idx}", v=self.hp)
         imgui.same_line()
-        imgui.text(f"/{self.max_hp}")
-        imgui.text_wrapped(self.damage_formula)
-        imgui.text_wrapped(self.rules)
-        if self.upkeep:
-            imgui.text(f"Upkeep: {self.upkeep}")
-        # TODO(orkaboy): RM button
-        if imgui.button(f"Remove##{idx}"):
-            pass
+        imgui.text(f"/{self.prototype.stats.max_hp}")
+        imgui.text_wrapped(f"Damage: {self.prototype.strings.damage_formula}")
+        imgui.text_wrapped(f"Counter: {self.prototype.strings.counter_formula}")
+        imgui.text_wrapped(self.prototype.strings.rules)
+        if self.prototype.stats.upkeep:
+            imgui.text(f"Upkeep: {self.prototype.stats.upkeep}")
+        # Remove button
+        if imgui.button(f"Remove Asset##{idx}"):
+            self.remove = True
