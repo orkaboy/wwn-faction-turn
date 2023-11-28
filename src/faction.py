@@ -133,10 +133,12 @@ class Faction:
             _, self.wealth = imgui.slider_int(
                 label=f"Wealth##{idx}", v=self.wealth, v_min=1, v_max=Faction.MAX_ATTRIBUTE
             )
-            # TODO(orkaboy): real value
-            _, self.magic = imgui.combo(
-                label=f"Magic##{idx}", current_item=0, items=[x.name for x in MagicLevel]
+            _, magic_value = imgui.combo(
+                label=f"Magic##{idx}",
+                current_item=self.magic.value,
+                items=[x.name for x in MagicLevel],
             )
+            self.magic = MagicLevel(magic_value)
             LayoutHelper.add_spacer()
             # Secondary attributes
             imgui.text("Secondary Attributes")
