@@ -118,31 +118,32 @@ class Faction:
         """Render faction in GUI."""
         header_open, visible = imgui.collapsing_header(f"{self.name}##{idx}", True, flags=32)
         if header_open and visible:
-            _, self.name = imgui.input_text(label="Name", str=self.name)
+            _, self.name = imgui.input_text(label=f"Name##{idx}", str=self.name)
             # TODO(orkaboy): Multiline?
-            _, self.desc = imgui.input_text(label="Description", str=self.desc)
+            _, self.desc = imgui.input_text(label=f"Description##{idx}", str=self.desc)
             LayoutHelper.add_spacer()
             imgui.text("Primary Attributes")
             # Attributes
             _, self.cunning = imgui.slider_int(
-                label="Cunning", v=self.cunning, v_min=1, v_max=Faction.MAX_ATTRIBUTE
+                label=f"Cunning##{idx}", v=self.cunning, v_min=1, v_max=Faction.MAX_ATTRIBUTE
             )
             _, self.force = imgui.slider_int(
-                label="Force", v=self.force, v_min=1, v_max=Faction.MAX_ATTRIBUTE
+                label=f"Force##{idx}", v=self.force, v_min=1, v_max=Faction.MAX_ATTRIBUTE
             )
             _, self.wealth = imgui.slider_int(
-                label="Wealth", v=self.wealth, v_min=1, v_max=Faction.MAX_ATTRIBUTE
+                label=f"Wealth##{idx}", v=self.wealth, v_min=1, v_max=Faction.MAX_ATTRIBUTE
             )
+            # TODO(orkaboy): real value
             _, self.magic = imgui.combo(
-                label="Magic", current_item=self.magic.value, items=[x.name for x in MagicLevel]
+                label=f"Magic##{idx}", current_item=0, items=[x.name for x in MagicLevel]
             )
             LayoutHelper.add_spacer()
             # Secondary attributes
             imgui.text("Secondary Attributes")
-            _, self.hp = imgui.input_int(label="HP", v=self.hp)
+            _, self.hp = imgui.input_int(label=f"HP##{idx}", v=self.hp)
             imgui.same_line()
             imgui.text(f"/{self.max_hp()}")
-            _, self.treasure = imgui.input_int(label="Treasure", v=self.treasure)
+            _, self.treasure = imgui.input_int(label=f"Treasure##{idx}", v=self.treasure)
             LayoutHelper.add_spacer()
             # TODO(orkaboy): Render Tags
             imgui.text("Tags")

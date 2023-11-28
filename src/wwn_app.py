@@ -3,7 +3,7 @@ from typing import Self
 from imgui_bundle import imgui
 
 from src.app import App
-from src.faction import Faction
+from src.faction import Faction, MagicLevel
 
 
 class WwnApp(App):
@@ -13,7 +13,11 @@ class WwnApp(App):
         """Initialize WwnApp object."""
         super().__init__(config_data, title="Worlds Without Number - Faction Turn")
 
-        self.factions: list[Faction] = []
+        self.factions: list[Faction] = [
+            Faction("id1", "Dragon Empire", cunning=4, force=8, wealth=6, magic=MagicLevel.MEDIUM),
+            Faction("id2", "Tali's Empire", cunning=6, force=5, wealth=5, magic=MagicLevel.MEDIUM),
+            Faction("id3", "Shadow Council", cunning=8, force=8, wealth=6, magic=MagicLevel.HIGH),
+        ]
 
     def execute(self: Self) -> None:
         """Draw GUI windows."""
