@@ -60,6 +60,7 @@ class App:
     """Class to handle the top level GUI window."""
 
     def __init__(self: Self, config_data: dict, title: str) -> None:
+        """Initialize App object and create imgui window."""
         super().__init__()
 
         config_ui: dict = config_data.get("ui", {})

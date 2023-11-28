@@ -9,6 +9,7 @@ class WwnApp(App):
     """Worlds Without Number specific App/GUI code."""
 
     def __init__(self: Self, config_data: dict) -> None:
+        """Initialize WwnApp object."""
         super().__init__(config_data, title="Worlds Without Number - Faction Turn")
 
     def execute(self: Self) -> None:
