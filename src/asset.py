@@ -58,9 +58,9 @@ class AssetStrings:
         self: Self,
         name: str,
         ident: str,
-        damage_formula: str,
-        counter_formula: str,
         rules: str,
+        damage_formula: str = "None",
+        counter_formula: str = "None",
     ) -> None:
         """Initialize AssetStrings object."""
         self.name: str = name
