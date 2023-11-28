@@ -1,6 +1,6 @@
 from config import open_config
 from log_init import initialize_logging
-from src.app import App
+from src.wwn_app import WwnApp
 
 
 def main() -> None:
@@ -9,10 +9,11 @@ def main() -> None:
     # Initialize logging
     initialize_logging(config_data)
     # Initialize app and GUI
-    app = App(config_data)
+    app = WwnApp(config_data)
     # Main loop
     while app.is_open():
         app.start_frame()
+        app.execute()
         app.end_frame()
     app.close()
 

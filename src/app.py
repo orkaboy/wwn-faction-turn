@@ -14,18 +14,16 @@ import glfw
 import OpenGL.GL as gl
 from imgui_bundle import imgui
 
-import config
+from src.layout_helper import LayoutHelper
 
 logger = logging.getLogger(__name__)
-
-config_ui = config.open_config().get("ui", {})
 
 
 # Create the window that our GUI/visualization will be in
 def create_glfw_window(
-    window_name: str = "Worlds Without Number - Faction Turn",
-    width: int = config_ui.get("width", 480),
-    height: int = config_ui.get("height", 800),
+    title: str,
+    width: int,
+    height: int,
 ) -> Any:  # noqa: ANN401
     """Initialize the glfw window and OpenGL context."""
     if not glfw.init():
@@ -43,7 +41,7 @@ def create_glfw_window(
     window = glfw.create_window(
         width=int(width),
         height=int(height),
-        title=window_name,
+        title=title,
         monitor=None,
         share=None,
     )
@@ -61,15 +59,17 @@ def create_glfw_window(
 class App:
     """Class to handle the top level GUI window."""
 
-    def __init__(self: Self, config_data: dict) -> None:
+    def __init__(self: Self, config_data: dict, title: str) -> None:
         super().__init__()
 
         config_ui: dict = config_data.get("ui", {})
+        width = config_ui.get("width", 480)
+        height = config_ui.get("height", 800)
 
         self.background_color = (0, 0, 0, 1)
 
         # Create Window/Context and set up renderer
-        self.window = create_glfw_window()
+        self.window = create_glfw_window(title=title, width=width, height=height)
         gl.glClearColor(*self.background_color)
         imgui.create_context()
 
@@ -134,6 +134,10 @@ class App:
         imgui.backends.glfw_new_frame()
         imgui.new_frame()
 
+    def execute(self: Self) -> None:
+        """Override."""
+        pass
+
     def end_frame(self: Self) -> None:
         """Finalize drawing. Should be called at the end of each frame."""
         imgui.render()
@@ -152,55 +156,3 @@ class App:
 
         glfw.destroy_window(self.window)
         glfw.terminate()
-
-
-class LayoutHelper:
-    """
-    Provides helper functions for creating GUI elements.
-
-    ```py
-    add_spacer()             # Add a horizontal line with some padding.
-    add_spacings(n)          # Add n imgui.spacing() elements.
-    add_tooltip(text, width) # Add a tooltip to the previous element.
-    ```
-    """
-
-    @staticmethod
-    def add_spacer() -> None:
-        """Add a horizontal line with some padding."""
-        imgui.spacing()
-        imgui.separator()
-        imgui.spacing()
-
-    @staticmethod
-    def add_spacings(n: int = 2) -> None:
-        """Add multiple imgui.spacing() at once."""
-        for _ in range(n):
-            imgui.spacing()
-
-    @staticmethod
-    def add_tooltip(text: str, width: int = 300) -> None:
-        """
-        Add a tooltip to the previous element.
-
-        Set `width` to `-1` to disable automatic text wrapping.
-        """
-        if imgui.is_item_hovered(flags=imgui.HoveredFlags_.delay_normal) and imgui.begin_tooltip():
-            imgui.set_next_window_size(size=imgui.ImVec2(0.0, 0.0))  # auto-fit tooltip to content
-            imgui.push_text_wrap_pos(width)
-            imgui.text_unformatted(text)
-            imgui.pop_text_wrap_pos()
-            imgui.end_tooltip()
-
-    @staticmethod
-    def set_gui_color(ui_element: str, color: imgui.ImVec4) -> None:
-        """
-        Set the color of a GUI element.
-
-        Args:
-        ----
-            ui_element: Check the demo window for valid values
-            color: Tuple of (r, g, b, a) values.
-        """
-        ui_element = getattr(imgui.Col_, ui_element)
-        imgui.get_style().set_color_(ui_element, color)
