@@ -2,10 +2,11 @@ from enum import Enum
 from random import randint
 from typing import Self
 
-from asset import Asset, AssetType
 from imgui_bundle import imgui
-from layout_helper import LayoutHelper
-from tag import Tag
+
+from src.asset import Asset, AssetType
+from src.layout_helper import LayoutHelper
+from src.tag import Tag
 
 
 class MagicLevel(Enum):
