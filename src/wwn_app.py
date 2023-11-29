@@ -1,4 +1,5 @@
 from typing import Self
+from uuid import uuid4
 
 from imgui_bundle import imgui
 
@@ -39,9 +40,14 @@ class WwnApp(App):
         imgui.set_window_pos("Factions", imgui.ImVec2(5, 5), imgui.Cond_.first_use_ever)
         imgui.set_window_size(imgui.ImVec2(240, 410), cond=imgui.Cond_.first_use_ever)
 
+        if imgui.button("Add Faction"):
+            self.factions.append(
+                Faction(ident=uuid4().hex, name="New Faction"),
+            )
+
         rm_faction = -1
         for idx, faction in enumerate(self.factions):
-            header_open, visible = imgui.collapsing_header(f"{faction.name}##{idx}", True, flags=0)
+            header_open, visible = imgui.collapsing_header(f"{faction.name}##{idx}", True, flags=32)
             if header_open and visible:
                 faction.render(idx)
                 # Remove button

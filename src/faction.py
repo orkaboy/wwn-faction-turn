@@ -25,7 +25,13 @@ class Faction:
     }
 
     def __init__(
-        self: Self, ident: str, name: str, cunning: int, force: int, wealth: int, magic: MagicLevel
+        self: Self,
+        ident: str,
+        name: str,
+        cunning: int = 1,
+        force: int = 1,
+        wealth: int = 1,
+        magic: MagicLevel = MagicLevel.NONE,
     ) -> None:
         """Initialize Faction object."""
         self.name = name

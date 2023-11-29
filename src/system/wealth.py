@@ -9,7 +9,7 @@ from src.asset import (
     MagicLevel,
 )
 from src.mapper import get_class_values
-from src.system import QUALITY
+from src.system.qualities import QUALITY
 
 
 # TIER 1 WEALTH ASSETS
