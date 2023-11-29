@@ -26,10 +26,18 @@ class WwnApp(App):
             Faction("id2", "Tali's Empire", cunning=6, force=5, wealth=5, magic=MagicLevel.MEDIUM),
             Faction("id3", "Shadow Council", cunning=8, force=8, wealth=6, magic=MagicLevel.HIGH),
         ]
-        self.factions[0].assets.append(Asset(prototype=CUNNING.Informers, owner="id1"))
-        self.factions[0].assets.append(Asset(prototype=CUNNING.Informers, owner="id1"))
-        self.factions[1].assets.append(Asset(prototype=CUNNING.Informers, owner="id2"))
-        self.factions[2].assets.append(Asset(prototype=CUNNING.PettySeers, owner="id3"))
+        self.factions[0].assets.append(
+            Asset(prototype=CUNNING.Informers, owner="id1", uuid=uuid4().hex)
+        )
+        self.factions[0].assets.append(
+            Asset(prototype=CUNNING.Informers, owner="id1", uuid=uuid4().hex)
+        )
+        self.factions[1].assets.append(
+            Asset(prototype=CUNNING.Informers, owner="id2", uuid=uuid4().hex)
+        )
+        self.factions[2].assets.append(
+            Asset(prototype=CUNNING.PettySeers, owner="id3", uuid=uuid4().hex)
+        )
 
         self.factions[1].tags.append(Tag(prototype=TAGS.Antimagical))
 
@@ -47,7 +55,9 @@ class WwnApp(App):
 
         rm_faction = -1
         for idx, faction in enumerate(self.factions):
-            header_open, visible = imgui.collapsing_header(f"{faction.name}##{idx}", True, flags=32)
+            header_open, visible = imgui.collapsing_header(
+                f"{faction.name}##{idx}", True, flags=imgui.TreeNodeFlags_.default_open
+            )
             if header_open and visible:
                 faction.render(idx)
                 # Remove button

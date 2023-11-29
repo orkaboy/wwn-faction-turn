@@ -104,19 +104,26 @@ class AssetPrototype:
 class Asset:
     def __init__(
         self: Self,
-        prototype: AssetPrototype,
+        prototype: AssetPrototype | AssetType,
         owner: str,
+        uuid: str,
     ) -> None:
         """Instantiate Asset object."""
         # Variable stats
         self.desc: str = ""
         self.owner = owner
-        self.uuid: str = ""
+        self.uuid = uuid
         self.prototype = prototype
-        self.hp: int = prototype.stats.max_hp
+        self.hp = 0
         self.qualities: list[Quality] = []
-        if prototype.stats.qualities:
-            self.qualities.extend(prototype.stats.qualities)
+        self.init_from_prototype(prototype)
+
+    def init_from_prototype(self: Self, prototype: AssetPrototype) -> None:
+        self.prototype = prototype
+        if isinstance(prototype, AssetPrototype):
+            self.hp = prototype.stats.max_hp
+            if prototype.stats.qualities:
+                self.qualities.extend(prototype.stats.qualities)
 
     def render(self: Self, idx: str) -> None:
         """Render asset in GUI."""

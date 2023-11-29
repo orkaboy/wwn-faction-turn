@@ -1,10 +1,12 @@
 from random import randint
 from typing import Self
+from uuid import uuid4
 
 from imgui_bundle import imgui
 
 from src.asset import Asset, AssetType, MagicLevel
 from src.layout_helper import LayoutHelper
+from src.system import cunning_list, force_list, wealth_list
 from src.tag import Tag
 
 
@@ -92,16 +94,22 @@ class Faction:
         gain = self.wealth / 2 + (self.force + self.cunning) / 4
         return gain.__ceil__()
 
+    @staticmethod
+    def _is_asset_type(asset: Asset, asset_type: AssetType) -> bool:
+        if isinstance(asset.prototype, AssetType):
+            return asset.prototype == asset_type
+        return asset.prototype.type == asset_type
+
     def assets_by_type(self: Self, asset_type: AssetType) -> list[Asset]:
         """Return a list of all asset of a certain type."""
-        return [asset for asset in self.assets if asset.prototype.type == asset_type]
+        return [asset for asset in self.assets if Faction._is_asset_type(asset, asset_type)]
 
     def asset_upkeep(self: Self) -> int:
         """The faction must pay any upkeep required by their individual Asset costs."""  # noqa: D401
         upkeep = 0
         # Sum up cost of assets
         for asset in self.assets:
-            upkeep += asset.upkeep()
+            upkeep += asset.prototype.upkeep()
         return upkeep
 
     def asset_excess(self: Self, asset_type: AssetType) -> int:
@@ -157,7 +165,7 @@ class Faction:
         tags_open, tags_visible = imgui.collapsing_header(
             f"Tags ({len(self.tags)})##{idx}",
             True,
-            flags=32,
+            flags=imgui.TreeNodeFlags_.default_open,
         )
         if tags_open and tags_visible:
             for tag_idx, tag in enumerate(self.tags):
@@ -169,16 +177,47 @@ class Faction:
         for asset_type in [AssetType.CUNNING, AssetType.FORCE, AssetType.WEALTH]:
             assets = self.assets_by_type(asset_type)
             assets_open, assets_visible = imgui.collapsing_header(
-                f"{asset_type.name} ({len(assets)})##{idx}",
+                f"{asset_type.name} ({len(assets)})##{idx}_{asset_type.name}",
                 True,
-                flags=0,
+                flags=imgui.TreeNodeFlags_.default_open,
             )
             if assets_open and assets_visible:
+                if imgui.button(f"Add Asset##{idx}_{asset_type.name}"):
+                    self.assets.append(Asset(prototype=asset_type, owner=self.id, uuid=uuid4().hex))
                 for asset_idx, asset in enumerate(assets):
-                    asset.render(f"{idx}_{asset_idx}")
+                    # Handle uninitialized assets
+                    if isinstance(asset.prototype, AssetType):
+                        # Create a combo box for selecting assets of a given type
+                        if imgui.begin_combo(
+                            label=f"Select type##{idx}_{asset_type.name}_{asset_idx}",
+                            preview_value="Asset type",
+                        ):
+                            match asset_type:
+                                case AssetType.CUNNING:
+                                    asset_list = cunning_list()
+                                case AssetType.FORCE:
+                                    asset_list = force_list()
+                                case AssetType.WEALTH:
+                                    asset_list = wealth_list()
+                                case _:
+                                    asset_list = []
+                            for proto_idx, asset_prototype in enumerate(asset_list):
+                                _, selected = imgui.selectable(
+                                    label=f"{asset_prototype.strings.name}##{idx}_{asset_type.name}_{asset_idx}_{proto_idx}",
+                                    p_selected=False,
+                                )
+                                LayoutHelper.add_tooltip(asset_prototype.strings.rules)
+                                if selected:
+                                    asset.init_from_prototype(asset_prototype)
+                            imgui.end_combo()
+                        imgui.same_line()  # For the remove button
+                    else:
+                        asset.render(f"{idx}_{asset_type.name}_{asset_idx}")
 
                     # Remove button
-                    if imgui.button(f"Remove Asset##{idx}_{asset_idx}"):
+                    if imgui.button(f"Remove Asset##{idx}_{asset_type.name}_{asset_idx}"):
                         rm_asset = asset.uuid
+                    LayoutHelper.add_spacer()
+        # Remove asset if we've pressed the remove button
         if rm_asset != "":
             self.assets = [asset for asset in self.assets if asset.uuid != rm_asset]
