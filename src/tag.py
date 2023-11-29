@@ -18,12 +18,7 @@ class Tag:
     ) -> None:
         """Initialize Tag object."""
         self.prototype = prototype
-        self.remove = False
 
-    def render(self: Self, idx: str) -> None:
+    def render(self: Self) -> None:
         imgui.text(self.prototype.name)
         imgui.text_wrapped(self.prototype.rules)
-
-        # Remove button
-        if imgui.button(f"Remove Tag##{idx}"):
-            self.remove = True

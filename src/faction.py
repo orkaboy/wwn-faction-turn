@@ -6,7 +6,7 @@ from imgui_bundle import imgui
 
 from src.asset import Asset, AssetType, MagicLevel
 from src.layout_helper import LayoutHelper
-from src.system import cunning_list, force_list, wealth_list
+from src.system import cunning_list, force_list, tags_list, wealth_list
 from src.tag import Tag
 
 
@@ -168,8 +168,34 @@ class Faction:
             flags=imgui.TreeNodeFlags_.default_open,
         )
         if tags_open and tags_visible:
+            rm_tag = -1
+            # Add new tag
+            if imgui.button(f"Add Tag##{idx}"):
+                self.tags.append(Tag(prototype=None))
             for tag_idx, tag in enumerate(self.tags):
-                tag.render(f"{idx}_{tag_idx}")
+                if tag.prototype is None:
+                    if imgui.begin_combo(
+                        label=f"Select tag type##{idx}_{tag_idx}", preview_value="Tag type"
+                    ):
+                        for tag_prototype in tags_list():
+                            _, selected = imgui.selectable(
+                                label=f"{tag_prototype.name}##{idx}_{tag_idx}",
+                                p_selected=False,
+                            )
+                            LayoutHelper.add_tooltip(tag_prototype.rules)
+                            if selected:
+                                tag.prototype = tag_prototype
+                        imgui.end_combo()
+                    imgui.same_line()
+                else:
+                    tag.render()
+                # Remove button
+                if imgui.button(f"Remove Tag##{idx}_{tag_idx}"):
+                    rm_tag = tag_idx
+            # Remove any tag previously marked for removal
+            if rm_tag != -1:
+                self.tags.pop(rm_tag)
+
         LayoutHelper.add_spacer()
         imgui.text("Assets")
         # Render Assets
@@ -189,7 +215,7 @@ class Faction:
                     if isinstance(asset.prototype, AssetType):
                         # Create a combo box for selecting assets of a given type
                         if imgui.begin_combo(
-                            label=f"Select type##{idx}_{asset_type.name}_{asset_idx}",
+                            label=f"Select asset type##{idx}_{asset_type.name}_{asset_idx}",
                             preview_value="Asset type",
                         ):
                             match asset_type:
@@ -201,9 +227,9 @@ class Faction:
                                     asset_list = wealth_list()
                                 case _:
                                     asset_list = []
-                            for proto_idx, asset_prototype in enumerate(asset_list):
+                            for asset_prototype in asset_list:
                                 _, selected = imgui.selectable(
-                                    label=f"{asset_prototype.strings.name}##{idx}_{asset_type.name}_{asset_idx}_{proto_idx}",
+                                    label=f"{asset_prototype.strings.name}##{idx}_{asset_type.name}_{asset_idx}",
                                     p_selected=False,
                                 )
                                 LayoutHelper.add_tooltip(asset_prototype.strings.rules)
