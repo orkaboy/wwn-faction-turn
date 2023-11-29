@@ -20,7 +20,6 @@ class FearfulIntimidation(AssetPrototype):
             strings=AssetStrings(
                 name="Fearful Intimidation",
                 ident="c_fearful_intimidation",
-                damage_formula="None",
                 counter_formula="1d4 damage",
                 rules="Judicious exercises of force have intimidated the locals, making them reluctant to cooperate with any group that stands opposed to the faction.",  # noqa: E501
             ),
