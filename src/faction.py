@@ -158,10 +158,14 @@ class Faction:
         LayoutHelper.add_spacer()
         # Secondary attributes
         imgui.text("SECONDARY ATTRIBUTES")
-        _, self.hp = imgui.input_int(label=f"HP##{idx}", v=self.hp)
+        _, self.hp = imgui.input_int(
+            label=f"HP##{idx}", v=self.hp, flags=imgui.InputTextFlags_.chars_decimal
+        )
         imgui.same_line()
-        imgui.text(f"/{self.max_hp()}")
-        _, self.treasure = imgui.input_int(label=f"Treasure##{idx}", v=self.treasure)
+        imgui.text(f"/ {self.max_hp()}")
+        _, self.treasure = imgui.input_int(
+            label=f"Treasure##{idx}", v=self.treasure, flags=imgui.InputTextFlags_.chars_decimal
+        )
         LayoutHelper.add_spacer()
         # Render Tags
         tags_open = imgui.collapsing_header(
