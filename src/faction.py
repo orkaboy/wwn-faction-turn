@@ -138,7 +138,7 @@ class Faction:
         # TODO(orkaboy): Multiline?
         _, self.desc = imgui.input_text(label=f"Description##{idx}", str=self.desc)
         LayoutHelper.add_spacer()
-        imgui.text("Primary Attributes")
+        imgui.text("PRIMARY ATTRIBUTES")
         # Attributes
         _, self.cunning = imgui.slider_int(
             label=f"Cunning##{idx}", v=self.cunning, v_min=1, v_max=Faction.MAX_ATTRIBUTE
@@ -157,7 +157,7 @@ class Faction:
         self.magic = MagicLevel(magic_value)
         LayoutHelper.add_spacer()
         # Secondary attributes
-        imgui.text("Secondary Attributes")
+        imgui.text("SECONDARY ATTRIBUTES")
         _, self.hp = imgui.input_int(label=f"HP##{idx}", v=self.hp)
         imgui.same_line()
         imgui.text(f"/{self.max_hp()}")
@@ -165,7 +165,7 @@ class Faction:
         LayoutHelper.add_spacer()
         # Render Tags
         tags_open = imgui.collapsing_header(
-            f"Tags ({len(self.tags)})##{idx}",
+            f"TAGS ({len(self.tags)})##{idx}",
             flags=imgui.TreeNodeFlags_.default_open,
         )
         if tags_open:
@@ -186,13 +186,13 @@ class Faction:
                 self.tags.pop(rm_tag)
 
         LayoutHelper.add_spacer()
-        imgui.text("Assets")
+        imgui.text("ASSETS")
         # Render Assets
         rm_asset = ""
         for asset_type in [AssetType.CUNNING, AssetType.FORCE, AssetType.WEALTH]:
             assets = self.assets_by_type(asset_type)
             group_open = imgui.collapsing_header(
-                f"{asset_type.name}##{idx}_{asset_type.name}",
+                f"{asset_type.name} ({len(assets)})##{idx}_{asset_type.name}",
                 flags=imgui.TreeNodeFlags_.default_open,
             )
             if group_open:
@@ -201,7 +201,7 @@ class Faction:
                 # Iterate over all assets, by type
                 for asset_idx, asset in enumerate(assets):
                     asset_open, asset_retain = imgui.collapsing_header(
-                        f"{asset.name()}##{idx}_{asset_type.name}_{asset_idx}",
+                        f"  {asset.name()}##{idx}_{asset_type.name}_{asset_idx}",
                         True,
                         flags=imgui.TreeNodeFlags_.default_open,
                     )
@@ -210,7 +210,6 @@ class Faction:
                         LayoutHelper.add_spacer()
                     elif not asset_retain:
                         rm_asset = asset.uuid
-            LayoutHelper.add_spacer()
         # Remove asset if we've pressed the remove button
         if rm_asset != "":
             self.assets = [asset for asset in self.assets if asset.uuid != rm_asset]
