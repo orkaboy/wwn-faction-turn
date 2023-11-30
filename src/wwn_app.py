@@ -6,6 +6,7 @@ from imgui_bundle import imgui
 from src.app import App
 from src.faction import Faction
 from src.layout_helper import LayoutHelper
+from src.style import STYLE
 
 
 class WwnApp(App):
@@ -16,6 +17,9 @@ class WwnApp(App):
         super().__init__(config_data, title="Worlds Without Number - Faction Turn")
         self.factions: list[Faction] = []
         self.turn_order: list[Faction] = None
+
+    def _turn_active(self: Self) -> bool:
+        return self.turn_order is not None
 
     def execute(self: Self) -> None:
         """Draw GUI windows."""
@@ -29,12 +33,14 @@ class WwnApp(App):
         imgui.set_window_pos("Turn", imgui.ImVec2(245, 5), imgui.Cond_.first_use_ever)
         imgui.set_window_size(imgui.ImVec2(240, 410), cond=imgui.Cond_.first_use_ever)
 
-        if self.turn_order:
+        if self._turn_active():
             for faction in self.turn_order:
                 imgui.text(f"{faction.initiative}: {faction.name}")
             # TODO(orkaboy): End turn, next faction etc.
-            if imgui.button("End Turn"):
+            STYLE.button_color(STYLE.COL_RED)
+            if imgui.button("Abort Turn"):
                 self.turn_order = None
+            STYLE.pop_color()
         elif imgui.button("New Turn"):
             for faction in self.factions:
                 faction.roll_initiative()
@@ -64,8 +70,10 @@ class WwnApp(App):
             if header_open and visible:
                 faction.render(idx)
                 # Remove button (don't allow for faction removal if turn order is active)
-                if self.turn_order is None and imgui.button(f"Remove Faction##{idx}"):
+                STYLE.button_color(STYLE.COL_RED)
+                if not self._turn_active() and imgui.button(f"Remove Faction##{idx}"):
                     rm_faction = idx
+                STYLE.pop_color()
                 LayoutHelper.add_spacer()
         if rm_faction >= 0:
             self.factions.pop(rm_faction)

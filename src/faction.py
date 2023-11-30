@@ -6,6 +6,7 @@ from imgui_bundle import imgui
 
 from src.asset import Asset
 from src.layout_helper import LayoutHelper
+from src.style import STYLE
 from src.system import AssetType, MagicLevel
 from src.tag import Tag
 
@@ -177,8 +178,10 @@ class Faction:
             for tag_idx, tag in enumerate(self.tags):
                 tag.render(f"{idx}_{tag_idx}")
                 # Remove button
-                if imgui.button(f"Remove Tag##{idx}_{tag_idx}"):
+                STYLE.button_color(STYLE.COL_RED)
+                if imgui.button(f"X##rm_tag_{idx}_{tag_idx}"):
                     rm_tag = tag_idx
+                STYLE.pop_color()
             # Remove any tag previously marked for removal
             if rm_tag != -1:
                 self.tags.pop(rm_tag)
@@ -202,8 +205,10 @@ class Faction:
                     asset.render(f"{idx}_{asset_type.name}_{asset_idx}")
 
                     # Remove button
-                    if imgui.button(f"Remove Asset##{idx}_{asset_type.name}_{asset_idx}"):
+                    STYLE.button_color(STYLE.COL_RED)
+                    if imgui.button(f"X##rm_asset_{idx}_{asset_type.name}_{asset_idx}"):
                         rm_asset = asset.uuid
+                    STYLE.pop_color()
                     LayoutHelper.add_spacer()
         # Remove asset if we've pressed the remove button
         if rm_asset != "":
