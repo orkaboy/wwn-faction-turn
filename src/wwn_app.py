@@ -69,9 +69,10 @@ class WwnApp(App):
             )
             if faction_open and faction_retain:
                 faction.render(idx)
-                LayoutHelper.add_spacer()
             if not faction_retain:
                 rm_faction = idx
+            if idx < len(self.factions) - 1:
+                LayoutHelper.add_spacer(2)
         if rm_faction >= 0:
             self.factions.pop(rm_faction)
 

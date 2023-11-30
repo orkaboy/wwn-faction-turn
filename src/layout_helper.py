@@ -24,10 +24,11 @@ class LayoutHelper:
     """
 
     @staticmethod
-    def add_spacer() -> None:
+    def add_spacer(separator: int = 1) -> None:
         """Add a horizontal line with some padding."""
         imgui.spacing()
-        imgui.separator()
+        for _ in range(separator):
+            imgui.separator()
         imgui.spacing()
 
     @staticmethod

@@ -135,8 +135,7 @@ class Faction:
     def render(self: Self, idx: int) -> None:
         """Render faction in GUI."""
         _, self.name = imgui.input_text(label=f"Name##{idx}", str=self.name)
-        # TODO(orkaboy): Multiline?
-        _, self.desc = imgui.input_text(label=f"Description##{idx}", str=self.desc)
+        _, self.desc = imgui.input_text_multiline(label=f"Description##{idx}", str=self.desc)
         LayoutHelper.add_spacer()
         imgui.text("PRIMARY ATTRIBUTES")
         # Attributes
@@ -193,27 +192,30 @@ class Faction:
         imgui.text("ASSETS")
         # Render Assets
         rm_asset = ""
-        for asset_type in [AssetType.CUNNING, AssetType.FORCE, AssetType.WEALTH]:
+        for type_idx, asset_type in enumerate(
+            [AssetType.CUNNING, AssetType.FORCE, AssetType.WEALTH]
+        ):
             assets = self.assets_by_type(asset_type)
             group_open = imgui.collapsing_header(
-                f"{asset_type.name} ({len(assets)})##{idx}_{asset_type.name}",
+                f"{asset_type.name} ({len(assets)})##{idx}_{type_idx}",
                 flags=imgui.TreeNodeFlags_.default_open,
             )
             if group_open:
-                if imgui.button(f"Add Asset##{idx}_{asset_type.name}"):
+                if imgui.button(f"Add Asset##{idx}_{type_idx}"):
                     self.assets.append(Asset(prototype=asset_type, owner=self.id, uuid=uuid4().hex))
                 # Iterate over all assets, by type
                 for asset_idx, asset in enumerate(assets):
                     asset_open, asset_retain = imgui.collapsing_header(
-                        f"  {asset.name()}##{idx}_{asset_type.name}_{asset_idx}",
+                        f"  {asset.name()}##{idx}_{type_idx}_{asset_idx}",
                         True,
                         flags=imgui.TreeNodeFlags_.default_open,
                     )
                     if asset_open and asset_retain:
-                        asset.render(f"{idx}_{asset_type.name}_{asset_idx}")
-                        LayoutHelper.add_spacer()
+                        asset.render(f"{idx}_{type_idx}_{asset_idx}")
                     elif not asset_retain:
                         rm_asset = asset.uuid
+            if type_idx < 3 - 1:
+                LayoutHelper.add_spacer()
         # Remove asset if we've pressed the remove button
         if rm_asset != "":
             self.assets = [asset for asset in self.assets if asset.uuid != rm_asset]

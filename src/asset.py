@@ -67,10 +67,8 @@ class Asset:
                     if selected:
                         self.init_from_prototype(asset_prototype)
                 imgui.end_combo()
-            imgui.same_line()  # For the remove button
         else:
-            # TODO(orkaboy): Multiline?
-            _, self.desc = imgui.input_text(label=f"Description##{idx}", str=self.desc)
+            _, self.desc = imgui.input_text_multiline(label=f"Description##{idx}", str=self.desc)
             _, self.hp = imgui.input_int(label=f"HP##{idx}", v=self.hp)
             imgui.same_line()
             imgui.text(f"/{self.prototype.stats.max_hp}")
