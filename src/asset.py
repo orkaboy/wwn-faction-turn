@@ -5,7 +5,7 @@ from imgui_bundle import imgui
 from src.layout_helper import LayoutHelper
 from src.quality import Quality
 from src.style import STYLE
-from src.system import AssetPrototype, AssetType, cunning_list, force_list, wealth_list
+from src.system import QUALITY, AssetPrototype, AssetType, cunning_list, force_list, wealth_list
 
 
 class Asset:
@@ -84,11 +84,19 @@ class Asset:
                 for q_idx, quality in enumerate(self.qualities):
                     imgui.same_line()
                     imgui.text(quality.name)
-                    imgui.same_line()
-                    STYLE.button_color(STYLE.COL_RED)
-                    if imgui.button(f"X##rm_q_{idx}_{q_idx}", size=imgui.ImVec2(16, 16)):
-                        rm_quality = q_idx
-                    STYLE.pop_color()
+                    LayoutHelper.add_tooltip(quality.rules)
+                    if not quality.persistent:
+                        imgui.same_line()
+                        STYLE.button_color(STYLE.COL_RED)
+                        if imgui.button(f"X##rm_q_{idx}_{q_idx}", size=imgui.ImVec2(16, 20)):
+                            rm_quality = q_idx
+                        STYLE.pop_color()
+                    if q_idx < len(self.qualities) - 1:
+                        imgui.same_line()
                 if rm_quality >= 0:
                     self.qualities.pop(rm_quality)
-            # TODO(orkaboy): Button to add new Quality to Asset.
+
+            if QUALITY.Stealth not in self.qualities:
+                imgui.same_line()
+                if imgui.button(f"Add Stealth##{idx}"):
+                    self.qualities.append(QUALITY.Stealth)
