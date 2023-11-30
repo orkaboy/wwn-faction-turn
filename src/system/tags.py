@@ -1,7 +1,14 @@
 from typing import Self
 
 from src.mapper import get_class_values
-from src.tag import TagPrototype
+
+
+class TagPrototype:
+    def __init__(self: Self, ident: str, name: str, rules: str) -> None:
+        """Initialize TagPrototype object."""
+        self.id = ident
+        self.name = name
+        self.rules = rules
 
 
 class Antimagical(TagPrototype):

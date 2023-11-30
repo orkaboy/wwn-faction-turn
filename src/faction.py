@@ -6,7 +6,7 @@ from imgui_bundle import imgui
 
 from src.asset import Asset, AssetType, MagicLevel
 from src.layout_helper import LayoutHelper
-from src.system import cunning_list, force_list, tags_list, wealth_list
+from src.system import cunning_list, force_list, wealth_list
 from src.tag import Tag
 
 
@@ -172,23 +172,9 @@ class Faction:
             # Add new tag
             if imgui.button(f"Add Tag##{idx}"):
                 self.tags.append(Tag(prototype=None))
+            # Iterate over all faction tags
             for tag_idx, tag in enumerate(self.tags):
-                if tag.prototype is None:
-                    if imgui.begin_combo(
-                        label=f"Select tag type##{idx}_{tag_idx}", preview_value="Tag type"
-                    ):
-                        for tag_prototype in tags_list():
-                            _, selected = imgui.selectable(
-                                label=f"{tag_prototype.name}##{idx}_{tag_idx}",
-                                p_selected=False,
-                            )
-                            LayoutHelper.add_tooltip(tag_prototype.rules)
-                            if selected:
-                                tag.prototype = tag_prototype
-                        imgui.end_combo()
-                    imgui.same_line()
-                else:
-                    tag.render()
+                tag.render(f"{idx}_{tag_idx}")
                 # Remove button
                 if imgui.button(f"Remove Tag##{idx}_{tag_idx}"):
                     rm_tag = tag_idx
