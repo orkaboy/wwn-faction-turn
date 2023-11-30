@@ -48,6 +48,7 @@ class Faction:
         self.exp: int = 0
         self.treasure: int = 0
         self.hp: int = self.max_hp()
+        self.initiative: int = 0
         # Asset tracking
         self.assets: list[Asset] = []
         # Tags tracking
@@ -61,9 +62,9 @@ class Faction:
         hp += Faction.ATTRIBUTE_COST[self.wealth]
         return hp
 
-    def roll_initiative(self: Self) -> int:
+    def roll_initiative(self: Self) -> None:
         """At the start of every faction turn, each faction rolls 1d8 for initiative, the highest rolls going first."""  # noqa: E501
-        return randint(1, 8)
+        self.initiative = randint(1, 8)
 
     def roll_attribute(self: Self, attribute: AssetType) -> int:
         """Make a roll on an attribute, based on an AssetType."""

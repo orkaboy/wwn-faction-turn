@@ -4,13 +4,8 @@ from uuid import uuid4
 from imgui_bundle import imgui
 
 from src.app import App
-from src.asset import Asset
 from src.faction import Faction
 from src.layout_helper import LayoutHelper
-
-# Temp
-from src.system import CUNNING, TAGS, MagicLevel
-from src.tag import Tag
 
 
 class WwnApp(App):
@@ -19,30 +14,38 @@ class WwnApp(App):
     def __init__(self: Self, config_data: dict) -> None:
         """Initialize WwnApp object."""
         super().__init__(config_data, title="Worlds Without Number - Faction Turn")
-
-        # TEMP
-        self.factions: list[Faction] = [
-            Faction("id1", "Dragon Empire", cunning=4, force=8, wealth=6, magic=MagicLevel.MEDIUM),
-            Faction("id2", "Tali's Empire", cunning=6, force=5, wealth=5, magic=MagicLevel.MEDIUM),
-            Faction("id3", "Shadow Council", cunning=8, force=8, wealth=6, magic=MagicLevel.HIGH),
-        ]
-        self.factions[0].assets.append(
-            Asset(prototype=CUNNING.Informers, owner="id1", uuid=uuid4().hex)
-        )
-        self.factions[0].assets.append(
-            Asset(prototype=CUNNING.Informers, owner="id1", uuid=uuid4().hex)
-        )
-        self.factions[1].assets.append(
-            Asset(prototype=CUNNING.Informers, owner="id2", uuid=uuid4().hex)
-        )
-        self.factions[2].assets.append(
-            Asset(prototype=CUNNING.PettySeers, owner="id3", uuid=uuid4().hex)
-        )
-
-        self.factions[1].tags.append(Tag(prototype=TAGS.Antimagical))
+        self.factions: list[Faction] = []
+        self.turn_order: list[Faction] = None
 
     def execute(self: Self) -> None:
         """Draw GUI windows."""
+        self.faction_window()
+        self.turn_window()
+
+    def turn_window(self: Self) -> None:
+        """Draw turn logic GUI."""
+        imgui.begin("Turn")
+
+        imgui.set_window_pos("Turn", imgui.ImVec2(245, 5), imgui.Cond_.first_use_ever)
+        imgui.set_window_size(imgui.ImVec2(240, 410), cond=imgui.Cond_.first_use_ever)
+
+        if self.turn_order:
+            for faction in self.turn_order:
+                imgui.text(f"{faction.initiative}: {faction.name}")
+            # TODO(orkaboy): End turn, next faction etc.
+            if imgui.button("End Turn"):
+                self.turn_order = None
+        elif imgui.button("New Turn"):
+            for faction in self.factions:
+                faction.roll_initiative()
+            self.turn_order = sorted(
+                self.factions.copy(), key=lambda faction: faction.initiative, reverse=True
+            )
+
+        imgui.end()
+
+    def faction_window(self: Self) -> None:
+        """Draw faction browser GUI."""
         imgui.begin("Factions")
 
         imgui.set_window_pos("Factions", imgui.ImVec2(5, 5), imgui.Cond_.first_use_ever)
@@ -60,8 +63,8 @@ class WwnApp(App):
             )
             if header_open and visible:
                 faction.render(idx)
-                # Remove button
-                if imgui.button(f"Remove Faction##{idx}"):
+                # Remove button (don't allow for faction removal if turn order is active)
+                if self.turn_order is None and imgui.button(f"Remove Faction##{idx}"):
                     rm_faction = idx
                 LayoutHelper.add_spacer()
         if rm_faction >= 0:
