@@ -5,11 +5,11 @@ from imgui_bundle import imgui
 
 from src.app import App
 from src.asset import Asset
-from src.faction import Faction, MagicLevel
+from src.faction import Faction
 from src.layout_helper import LayoutHelper
 
 # Temp
-from src.system import CUNNING, TAGS
+from src.system import CUNNING, TAGS, MagicLevel
 from src.tag import Tag
 
 

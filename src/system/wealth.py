@@ -1,6 +1,7 @@
 from typing import Self
 
-from src.asset import (
+from src.mapper import get_class_values
+from src.system.asset_proto import (
     AssetPrototype,
     AssetRequirement,
     AssetStats,
@@ -8,7 +9,6 @@ from src.asset import (
     AssetType,
     MagicLevel,
 )
-from src.mapper import get_class_values
 from src.system.qualities import QUALITY
 
 

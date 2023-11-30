@@ -4,9 +4,9 @@ from uuid import uuid4
 
 from imgui_bundle import imgui
 
-from src.asset import Asset, AssetType, MagicLevel
+from src.asset import Asset
 from src.layout_helper import LayoutHelper
-from src.system import cunning_list, force_list, wealth_list
+from src.system import AssetType, MagicLevel
 from src.tag import Tag
 
 
@@ -196,35 +196,9 @@ class Faction:
             if assets_open and assets_visible:
                 if imgui.button(f"Add Asset##{idx}_{asset_type.name}"):
                     self.assets.append(Asset(prototype=asset_type, owner=self.id, uuid=uuid4().hex))
+                # Iterate over all assets, by type
                 for asset_idx, asset in enumerate(assets):
-                    # Handle uninitialized assets
-                    if isinstance(asset.prototype, AssetType):
-                        # Create a combo box for selecting assets of a given type
-                        if imgui.begin_combo(
-                            label=f"Select asset type##{idx}_{asset_type.name}_{asset_idx}",
-                            preview_value="Asset type",
-                        ):
-                            match asset_type:
-                                case AssetType.CUNNING:
-                                    asset_list = cunning_list()
-                                case AssetType.FORCE:
-                                    asset_list = force_list()
-                                case AssetType.WEALTH:
-                                    asset_list = wealth_list()
-                                case _:
-                                    asset_list = []
-                            for asset_prototype in asset_list:
-                                _, selected = imgui.selectable(
-                                    label=f"{asset_prototype.strings.name}##{idx}_{asset_type.name}_{asset_idx}",
-                                    p_selected=False,
-                                )
-                                LayoutHelper.add_tooltip(asset_prototype.strings.rules)
-                                if selected:
-                                    asset.init_from_prototype(asset_prototype)
-                            imgui.end_combo()
-                        imgui.same_line()  # For the remove button
-                    else:
-                        asset.render(f"{idx}_{asset_type.name}_{asset_idx}")
+                    asset.render(f"{idx}_{asset_type.name}_{asset_idx}")
 
                     # Remove button
                     if imgui.button(f"Remove Asset##{idx}_{asset_type.name}_{asset_idx}"):
