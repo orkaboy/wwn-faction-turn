@@ -31,7 +31,7 @@ class Informers(AssetPrototype):
                 max_hp=3,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special, QUALITY.Action],
             ),
         )
 
@@ -76,7 +76,7 @@ class Smugglers(AssetPrototype):
                 max_hp=4,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.WEALTH,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Action],
             ),
         )
 
@@ -96,7 +96,7 @@ class UsefulIdiots(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=2,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -120,7 +120,7 @@ class Blackmail(AssetPrototype):
                 max_hp=4,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -143,7 +143,7 @@ class DancingGirls(AssetPrototype):
                 max_hp=3,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.WEALTH,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -166,7 +166,7 @@ class HiredFriends(AssetPrototype):
                 max_hp=4,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special, QUALITY.Action],
             ),
         )
 
@@ -189,7 +189,7 @@ class Saboteurs(AssetPrototype):
                 max_hp=6,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.WEALTH,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -214,7 +214,7 @@ class BewitchingCharmer(AssetPrototype):
                 max_hp=4,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -234,7 +234,7 @@ class CovertTransport(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=4,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special, QUALITY.Action],
             ),
         )
 
@@ -258,7 +258,7 @@ class OccultInfiltrators(AssetPrototype):
                 max_hp=4,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -307,7 +307,7 @@ class CourtPatronage(AssetPrototype):
                 max_hp=8,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -373,7 +373,7 @@ class VigilantAgents(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=8,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -445,7 +445,7 @@ class Shapeshifters(AssetPrototype):
                 max_hp=8,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special, QUALITY.Action],
             ),
         )
 
@@ -466,7 +466,7 @@ class InterruptedLogistics(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=10,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -510,7 +510,7 @@ class UndergroundRoads(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=15,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special, QUALITY.Action],
             ),
         )
 
@@ -556,7 +556,7 @@ class Mindbenders(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=10,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Action],
             ),
         )
 
@@ -580,7 +580,7 @@ class PopularMovement(AssetPrototype):
                 max_hp=16,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -602,7 +602,7 @@ class JustAsPlanned(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=15,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -624,7 +624,7 @@ class OmniscientSeers(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=10,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 

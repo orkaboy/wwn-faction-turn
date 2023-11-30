@@ -141,6 +141,7 @@ class MilitaryTransport(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=6,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -260,6 +261,7 @@ class TempleFanatics(AssetPrototype):
                 max_hp=6,
                 atk_type=AssetType.FORCE,
                 def_type=AssetType.FORCE,
+                qualities=[QUALITY.Special],
             ),
         )
 
@@ -327,6 +329,7 @@ class MilitaryRoads(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=10,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -347,6 +350,7 @@ class VanguardUnit(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=10,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -370,6 +374,7 @@ class WarFleet(AssetPrototype):
                 max_hp=8,
                 atk_type=AssetType.FORCE,
                 def_type=AssetType.FORCE,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -394,7 +399,7 @@ class DemonicSlayer(AssetPrototype):
                 max_hp=4,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.CUNNING,
-                qualities=[QUALITY.Subtle, QUALITY.Stealth],
+                qualities=[QUALITY.Subtle, QUALITY.Special, QUALITY.Stealth],
             ),
         )
 
@@ -417,6 +422,7 @@ class MagicalLogistics(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=6,
+                qualities=[QUALITY.Special, QUALITY.Action],
             ),
         )
 
@@ -461,6 +467,7 @@ class FortificationProgram(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=18,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -531,7 +538,7 @@ class BrilliantGeneral(AssetPrototype):
                 max_hp=8,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.FORCE,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -553,6 +560,7 @@ class PurityRites(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=10,
+                qualities=[QUALITY.Special],
             ),
         )
 
@@ -625,6 +633,7 @@ class InvincibleLegion(AssetPrototype):
                 max_hp=30,
                 atk_type=AssetType.FORCE,
                 def_type=AssetType.FORCE,
+                qualities=[QUALITY.Special],
             ),
         )
 

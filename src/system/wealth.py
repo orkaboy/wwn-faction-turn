@@ -54,7 +54,7 @@ class CooperativeBusinesses(AssetPrototype):
                 max_hp=2,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.WEALTH,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -75,6 +75,7 @@ class Farmers(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=4,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -122,6 +123,7 @@ class Caravan(AssetPrototype):
                 max_hp=4,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.WEALTH,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -142,7 +144,7 @@ class Dragomans(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=4,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
 
@@ -166,6 +168,7 @@ class Pleaders(AssetPrototype):
                 max_hp=4,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.WEALTH,
+                qualities=[QUALITY.Special],
             ),
         )
 
@@ -210,6 +213,7 @@ class AncientMechanisms(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=4,
+                qualities=[QUALITY.Special],
             ),
         )
 
@@ -229,6 +233,7 @@ class ArcaneLaboratory(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=4,
+                qualities=[QUALITY.Special],
             ),
         )
 
@@ -252,6 +257,7 @@ class FreeCompany(AssetPrototype):
                 max_hp=6,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.FORCE,
+                qualities=[QUALITY.Action, QUALITY.Special],
             ),
         )
 
@@ -272,6 +278,7 @@ class Manufactory(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=4,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -292,6 +299,7 @@ class Healers(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=8,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -315,6 +323,7 @@ class Monopoly(AssetPrototype):
                 max_hp=12,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.WEALTH,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -339,6 +348,7 @@ class OccultCountermeasures(AssetPrototype):
                 max_hp=8,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.CUNNING,
+                qualities=[QUALITY.Special],
             ),
         )
 
@@ -361,6 +371,7 @@ class Usurers(AssetPrototype):
                 max_hp=8,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.WEALTH,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -384,6 +395,7 @@ class MadGenius(AssetPrototype):
                 max_hp=2,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.CUNNING,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -406,7 +418,7 @@ class SmugglingFleet(AssetPrototype):
                 max_hp=6,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.FORCE,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Action],
             ),
         )
 
@@ -429,7 +441,7 @@ class SupplyInterruption(AssetPrototype):
                 max_hp=8,
                 atk_type=AssetType.CUNNING,
                 def_type=AssetType.WEALTH,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Action],
             ),
         )
 
@@ -453,7 +465,7 @@ class EconomicDisruption(AssetPrototype):
                 max_hp=10,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.WEALTH,
-                qualities=[QUALITY.Subtle],
+                qualities=[QUALITY.Subtle, QUALITY.Action],
             ),
         )
 
@@ -477,6 +489,7 @@ class MerchantPrince(AssetPrototype):
                 max_hp=10,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.WEALTH,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -500,6 +513,7 @@ class TradeCompany(AssetPrototype):
                 max_hp=10,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.WEALTH,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -521,6 +535,7 @@ class AncientWorkshop(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=16,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -544,6 +559,7 @@ class LeadOrSilver(AssetPrototype):
                 max_hp=10,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.WEALTH,
+                qualities=[QUALITY.Special],
             ),
         )
 
@@ -566,6 +582,7 @@ class TransportNetwork(AssetPrototype):
                 max_hp=5,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.WEALTH,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -588,6 +605,7 @@ class GoldenProsperity(AssetPrototype):
             ),
             stats=AssetStats(
                 max_hp=30,
+                qualities=[QUALITY.Action],
             ),
         )
 
@@ -611,6 +629,7 @@ class HiredLegion(AssetPrototype):
                 max_hp=20,
                 atk_type=AssetType.WEALTH,
                 def_type=AssetType.FORCE,
+                qualities=[QUALITY.Action],
             ),
         )
 
