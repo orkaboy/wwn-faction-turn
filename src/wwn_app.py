@@ -64,17 +64,14 @@ class WwnApp(App):
 
         rm_faction = -1
         for idx, faction in enumerate(self.factions):
-            header_open, visible = imgui.collapsing_header(
+            faction_open, faction_retain = imgui.collapsing_header(
                 f"{faction.name}##{idx}", True, flags=imgui.TreeNodeFlags_.default_open
             )
-            if header_open and visible:
+            if faction_open and faction_retain:
                 faction.render(idx)
-                # Remove button (don't allow for faction removal if turn order is active)
-                STYLE.button_color(STYLE.COL_RED)
-                if not self._turn_active() and imgui.button(f"Remove Faction##{idx}"):
-                    rm_faction = idx
-                STYLE.pop_color()
                 LayoutHelper.add_spacer()
+            if not faction_retain:
+                rm_faction = idx
         if rm_faction >= 0:
             self.factions.pop(rm_faction)
 

@@ -164,12 +164,11 @@ class Faction:
         _, self.treasure = imgui.input_int(label=f"Treasure##{idx}", v=self.treasure)
         LayoutHelper.add_spacer()
         # Render Tags
-        tags_open, tags_visible = imgui.collapsing_header(
+        tags_open = imgui.collapsing_header(
             f"Tags ({len(self.tags)})##{idx}",
-            True,
             flags=imgui.TreeNodeFlags_.default_open,
         )
-        if tags_open and tags_visible:
+        if tags_open:
             rm_tag = -1
             # Add new tag
             if imgui.button(f"Add Tag##{idx}"):
@@ -192,24 +191,26 @@ class Faction:
         rm_asset = ""
         for asset_type in [AssetType.CUNNING, AssetType.FORCE, AssetType.WEALTH]:
             assets = self.assets_by_type(asset_type)
-            assets_open, assets_visible = imgui.collapsing_header(
-                f"{asset_type.name} ({len(assets)})##{idx}_{asset_type.name}",
-                True,
+            group_open = imgui.collapsing_header(
+                f"{asset_type.name}##{idx}_{asset_type.name}",
                 flags=imgui.TreeNodeFlags_.default_open,
             )
-            if assets_open and assets_visible:
+            if group_open:
                 if imgui.button(f"Add Asset##{idx}_{asset_type.name}"):
                     self.assets.append(Asset(prototype=asset_type, owner=self.id, uuid=uuid4().hex))
                 # Iterate over all assets, by type
                 for asset_idx, asset in enumerate(assets):
-                    asset.render(f"{idx}_{asset_type.name}_{asset_idx}")
-
-                    # Remove button
-                    STYLE.button_color(STYLE.COL_RED)
-                    if imgui.button(f"X##rm_asset_{idx}_{asset_type.name}_{asset_idx}"):
+                    asset_open, asset_retain = imgui.collapsing_header(
+                        f"{asset.name()}##{idx}_{asset_type.name}_{asset_idx}",
+                        True,
+                        flags=imgui.TreeNodeFlags_.default_open,
+                    )
+                    if asset_open and asset_retain:
+                        asset.render(f"{idx}_{asset_type.name}_{asset_idx}")
+                        LayoutHelper.add_spacer()
+                    elif not asset_retain:
                         rm_asset = asset.uuid
-                    STYLE.pop_color()
-                    LayoutHelper.add_spacer()
+            LayoutHelper.add_spacer()
         # Remove asset if we've pressed the remove button
         if rm_asset != "":
             self.assets = [asset for asset in self.assets if asset.uuid != rm_asset]

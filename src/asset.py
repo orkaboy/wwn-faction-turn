@@ -35,6 +35,11 @@ class Asset:
             if prototype.stats.qualities:
                 self.qualities.extend(prototype.stats.qualities)
 
+    def name(self: Self) -> str:
+        if self.is_initialized():
+            return self.prototype.strings.name
+        return "New Asset"
+
     def render(self: Self, idx: str) -> None:
         """Render asset in GUI."""
         # Handle uninitialized assets
@@ -64,7 +69,6 @@ class Asset:
                 imgui.end_combo()
             imgui.same_line()  # For the remove button
         else:
-            imgui.text(self.prototype.strings.name)
             # TODO(orkaboy): Multiline?
             _, self.desc = imgui.input_text(label=f"Description##{idx}", str=self.desc)
             _, self.hp = imgui.input_int(label=f"HP##{idx}", v=self.hp)
