@@ -1,3 +1,4 @@
+from random import randint
 from typing import Self
 
 from src.mapper import get_class_values
@@ -32,6 +33,9 @@ class FearfulIntimidation(AssetPrototype):
             ),
         )
 
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4)
+
 
 class LocalGuard(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -54,6 +58,12 @@ class LocalGuard(AssetPrototype):
                 def_type=AssetType.FORCE,
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 3) + 1
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4) + 1
 
 
 class SummonedHunter(AssetPrototype):
@@ -79,6 +89,9 @@ class SummonedHunter(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
 
 class Thugs(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -102,6 +115,9 @@ class Thugs(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
 
 # TIER 2 FORCE ASSETS
 class GuerrillaPopulace(AssetPrototype):
@@ -124,6 +140,9 @@ class GuerrillaPopulace(AssetPrototype):
                 def_type=AssetType.FORCE,
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4) + 1
 
 
 class MilitaryTransport(AssetPrototype):
@@ -168,6 +187,12 @@ class ReserveCorps(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 class Scouts(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -191,6 +216,12 @@ class Scouts(AssetPrototype):
                 qualities=[QUALITY.Subtle],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4) + randint(1, 4)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4) + 1
 
 
 # TIER 3 FORCE ASSETS
@@ -218,6 +249,12 @@ class EnchantedElites(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 10)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 class Infantry(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -240,6 +277,12 @@ class Infantry(AssetPrototype):
                 def_type=AssetType.FORCE,
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 8)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
 
 
 class TempleFanatics(AssetPrototype):
@@ -265,6 +308,12 @@ class TempleFanatics(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
 
 class WitchHunters(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -289,6 +338,12 @@ class WitchHunters(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4) + 1
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 # TIER 4 FORCE ASSETS
 class Cavalry(AssetPrototype):
@@ -312,6 +367,12 @@ class Cavalry(AssetPrototype):
                 def_type=AssetType.FORCE,
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4)
 
 
 class MilitaryRoads(AssetPrototype):
@@ -354,6 +415,9 @@ class VanguardUnit(AssetPrototype):
             ),
         )
 
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 class WarFleet(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -377,6 +441,12 @@ class WarFleet(AssetPrototype):
                 qualities=[QUALITY.Action],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 8)
 
 
 # TIER 5 FORCE ASSETS
@@ -403,6 +473,9 @@ class DemonicSlayer(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6) + 2
+
 
 class MagicalLogistics(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -411,8 +484,6 @@ class MagicalLogistics(AssetPrototype):
             strings=AssetStrings(
                 name="Magical Logistics",
                 ident="c_magical_logistics",
-                damage_formula="None",
-                counter_formula="None",
                 rules="An advanced web of magical Workings, skilled sorcerers, and trained logistical experts are enlisted to streamline the faction's maintenance and sustain damaged units. Once per faction turn, as a free action, the Asset can repair 2 hit points of damage to an allied Force Asset.",  # noqa: E501
             ),
             requirements=AssetRequirement(
@@ -449,6 +520,12 @@ class SiegeExperts(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 # TIER 6 FORCE ASSETS
 class FortificationProgram(AssetPrototype):
@@ -470,6 +547,9 @@ class FortificationProgram(AssetPrototype):
                 qualities=[QUALITY.Action],
             ),
         )
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
 
 
 class Knights(AssetPrototype):
@@ -493,6 +573,12 @@ class Knights(AssetPrototype):
                 def_type=AssetType.FORCE,
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 8) + randint(1, 8)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
 
 
 class WarMachines(AssetPrototype):
@@ -518,6 +604,12 @@ class WarMachines(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 10) + randint(1, 10) + 4
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 10)
+
 
 # TIER 7 FORCE ASSETS
 class BrilliantGeneral(AssetPrototype):
@@ -542,6 +634,9 @@ class BrilliantGeneral(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 8)
+
 
 class PurityRites(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -563,6 +658,9 @@ class PurityRites(AssetPrototype):
                 qualities=[QUALITY.Special],
             ),
         )
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 8) + randint(1, 8) + 2
 
 
 class Warshaped(AssetPrototype):
@@ -589,6 +687,12 @@ class Warshaped(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 8) + randint(1, 8) + 2
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 8) + randint(1, 8)
+
 
 # TIER 8 FORCE ASSETS
 class ApocalypseEngine(AssetPrototype):
@@ -613,6 +717,9 @@ class ApocalypseEngine(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 10) + randint(1, 10) + randint(1, 10) + 4
+
 
 class InvincibleLegion(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -636,6 +743,12 @@ class InvincibleLegion(AssetPrototype):
                 qualities=[QUALITY.Special],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 10) + randint(1, 10) + 4
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 10) + randint(1, 10) + 4
 
 
 class FORCE:

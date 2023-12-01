@@ -1,3 +1,4 @@
+from random import randint
 from typing import Self
 
 from src.mapper import get_class_values
@@ -57,6 +58,9 @@ class PettySeers(AssetPrototype):
             ),
         )
 
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 class Smugglers(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -79,6 +83,9 @@ class Smugglers(AssetPrototype):
                 qualities=[QUALITY.Subtle, QUALITY.Action],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4)
 
 
 class UsefulIdiots(AssetPrototype):
@@ -124,6 +131,9 @@ class Blackmail(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4)
+
 
 class DancingGirls(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -146,6 +156,9 @@ class DancingGirls(AssetPrototype):
                 qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4) + randint(1, 4)
 
 
 class HiredFriends(AssetPrototype):
@@ -170,6 +183,9 @@ class HiredFriends(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
 
 class Saboteurs(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -192,6 +208,9 @@ class Saboteurs(AssetPrototype):
                 qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4) + randint(1, 4)
 
 
 # TIER 3 CUNNING ASSETS
@@ -262,6 +281,9 @@ class OccultInfiltrators(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
 
 class Spymaster(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -285,6 +307,12 @@ class Spymaster(AssetPrototype):
                 qualities=[QUALITY.Subtle],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
 
 
 # TIER 4 CUNNING ASSETS
@@ -311,6 +339,12 @@ class CourtPatronage(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 class IdealisticThugs(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -334,6 +368,12 @@ class IdealisticThugs(AssetPrototype):
                 qualities=[QUALITY.Subtle],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
 
 
 class Seditionists(AssetPrototype):
@@ -376,6 +416,9 @@ class VigilantAgents(AssetPrototype):
                 qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4)
 
 
 # TIER 5 CUNNING ASSETS
@@ -425,6 +468,9 @@ class OrganizationMoles(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
 
 class Shapeshifters(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -448,6 +494,9 @@ class Shapeshifters(AssetPrototype):
                 qualities=[QUALITY.Subtle, QUALITY.Special, QUALITY.Action],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
 
 
 # TIER 6 CUNNING ASSETS
@@ -493,6 +542,12 @@ class Prophet(AssetPrototype):
                 qualities=[QUALITY.Subtle],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 8) + randint(1, 8)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 8)
 
 
 class UndergroundRoads(AssetPrototype):
@@ -560,6 +615,9 @@ class Mindbenders(AssetPrototype):
             ),
         )
 
+    def roll_counter(self: Self) -> int:
+        return randint(1, 8) + randint(1, 8)
+
 
 class PopularMovement(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -584,6 +642,12 @@ class PopularMovement(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 # TIER 8 CUNNING ASSETS
 class JustAsPlanned(AssetPrototype):
@@ -606,6 +670,9 @@ class JustAsPlanned(AssetPrototype):
             ),
         )
 
+    def roll_counter(self: Self) -> int:
+        return randint(1, 10)
+
 
 class OmniscientSeers(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -627,6 +694,9 @@ class OmniscientSeers(AssetPrototype):
                 qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 8)
 
 
 class CUNNING:

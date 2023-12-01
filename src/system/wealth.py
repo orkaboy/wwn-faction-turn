@@ -1,3 +1,4 @@
+from random import randint
 from typing import Self
 
 from src.mapper import get_class_values
@@ -35,6 +36,12 @@ class ArmedGuards(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 3)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4)
+
 
 class CooperativeBusinesses(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -58,6 +65,9 @@ class CooperativeBusinesses(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4) - 1
+
 
 class Farmers(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -78,6 +88,9 @@ class Farmers(AssetPrototype):
                 qualities=[QUALITY.Action],
             ),
         )
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4)
 
 
 class FrontMerchant(AssetPrototype):
@@ -103,6 +116,12 @@ class FrontMerchant(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4) - 1
+
 
 # TIER 2 WEALTH ASSETS
 class Caravan(AssetPrototype):
@@ -127,6 +146,9 @@ class Caravan(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4)
+
 
 class Dragomans(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -147,6 +169,9 @@ class Dragomans(AssetPrototype):
                 qualities=[QUALITY.Subtle, QUALITY.Special],
             ),
         )
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4)
 
 
 class Pleaders(AssetPrototype):
@@ -172,6 +197,12 @@ class Pleaders(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4) + randint(1, 4)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 class WorkerMob(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -194,6 +225,12 @@ class WorkerMob(AssetPrototype):
                 def_type=AssetType.FORCE,
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4) + 1
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4)
 
 
 # TIER 3 WEALTH ASSETS
@@ -261,6 +298,12 @@ class FreeCompany(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 4) + randint(1, 4) + 2
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 class Manufactory(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -281,6 +324,9 @@ class Manufactory(AssetPrototype):
                 qualities=[QUALITY.Action],
             ),
         )
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 4)
 
 
 # TIER 4 WEALTH ASSETS
@@ -327,6 +373,12 @@ class Monopoly(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
+
 
 class OccultCountermeasures(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -352,6 +404,12 @@ class OccultCountermeasures(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 10) + randint(1, 10)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 10)
+
 
 class Usurers(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -374,6 +432,9 @@ class Usurers(AssetPrototype):
                 qualities=[QUALITY.Action],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 10)
 
 
 # TIER 5 WEALTH ASSETS
@@ -399,6 +460,9 @@ class MadGenius(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
+
 
 class SmugglingFleet(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -422,6 +486,9 @@ class SmugglingFleet(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
 
 class SupplyInterruption(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -444,6 +511,9 @@ class SupplyInterruption(AssetPrototype):
                 qualities=[QUALITY.Subtle, QUALITY.Action],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6)
 
 
 # TIER 6 WEALTH ASSETS
@@ -469,6 +539,9 @@ class EconomicDisruption(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
 
 class MerchantPrince(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -493,6 +566,12 @@ class MerchantPrince(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 8) + randint(1, 8)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 8)
+
 
 class TradeCompany(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -516,6 +595,12 @@ class TradeCompany(AssetPrototype):
                 qualities=[QUALITY.Action],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 6) + randint(1, 6)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 6)
 
 
 # TIER 7 WEALTH ASSETS
@@ -563,6 +648,12 @@ class LeadOrSilver(AssetPrototype):
             ),
         )
 
+    def roll_damage(self: Self) -> int:
+        return randint(1, 10) + randint(1, 10)
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 8) + randint(1, 8)
+
 
 class TransportNetwork(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -585,6 +676,9 @@ class TransportNetwork(AssetPrototype):
                 qualities=[QUALITY.Action],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 12)
 
 
 # TIER 8 WEALTH ASSETS
@@ -609,6 +703,9 @@ class GoldenProsperity(AssetPrototype):
             ),
         )
 
+    def roll_counter(self: Self) -> int:
+        return randint(1, 10) + randint(1, 10)
+
 
 class HiredLegion(AssetPrototype):
     def __init__(self: Self) -> None:
@@ -632,6 +729,12 @@ class HiredLegion(AssetPrototype):
                 qualities=[QUALITY.Action],
             ),
         )
+
+    def roll_damage(self: Self) -> int:
+        return randint(1, 10) + randint(1, 10) + 4
+
+    def roll_counter(self: Self) -> int:
+        return randint(1, 10) + randint(1, 10)
 
 
 class WEALTH:
