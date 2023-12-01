@@ -29,7 +29,7 @@ class Faction:
 
     def __init__(
         self: Self,
-        ident: str,
+        uuid: str,
         name: str,
         cunning: int = 1,
         force: int = 1,
@@ -39,7 +39,7 @@ class Faction:
         """Initialize Faction object."""
         self.name = name
         self.desc: str = ""
-        self.id: str = ident
+        self.uuid: str = uuid
         # Main faction attributes
         self.cunning: int = cunning
         self.force: int = force
@@ -202,7 +202,9 @@ class Faction:
             )
             if group_open:
                 if imgui.button(f"Add Asset##{idx}_{type_idx}"):
-                    self.assets.append(Asset(prototype=asset_type, owner=self.id, uuid=uuid4().hex))
+                    self.assets.append(
+                        Asset(prototype=asset_type, owner=self.uuid, uuid=uuid4().hex)
+                    )
                 # Iterate over all assets, by type
                 for asset_idx, asset in enumerate(assets):
                     asset_open, asset_retain = imgui.collapsing_header(

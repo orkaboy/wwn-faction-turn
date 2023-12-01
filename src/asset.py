@@ -3,6 +3,7 @@ from typing import Self
 from imgui_bundle import imgui
 
 from src.layout_helper import LayoutHelper
+from src.location import Location
 from src.quality import Quality
 from src.style import STYLE
 from src.system import QUALITY, AssetPrototype, AssetType, cunning_list, force_list, wealth_list
@@ -14,6 +15,7 @@ class Asset:
         prototype: AssetPrototype | AssetType,
         owner: str,
         uuid: str,
+        loc: Location = None,
     ) -> None:
         """Instantiate Asset object."""
         # Variable stats
@@ -22,6 +24,7 @@ class Asset:
         self.uuid = uuid
         self.prototype = prototype
         self.hp = 0
+        self.loc = loc
         self.qualities: list[Quality] = []
         self.init_from_prototype(prototype)
 
@@ -69,6 +72,14 @@ class Asset:
                 imgui.end_combo()
         else:
             _, self.desc = imgui.input_text_multiline(label=f"Description##{idx}", str=self.desc)
+            imgui.text("Location:")
+            imgui.same_line()
+            if self.loc:
+                imgui.text(self.loc)
+                LayoutHelper.add_tooltip(text=self.loc.desc)
+            else:
+                # TODO(orkaboy): combo button? need access to the locations
+                imgui.text("TODO")
             _, self.hp = imgui.input_int(label=f"HP##{idx}", v=self.hp)
             imgui.same_line()
             imgui.text(f"/{self.prototype.stats.max_hp}")
