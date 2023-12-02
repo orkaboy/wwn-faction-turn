@@ -25,7 +25,9 @@ class WwnApp(App):
         super().__init__(config_data, title="Worlds Without Number - Faction Turn")
         self.factions: list[Faction] = []
         self.locations: list[Location] = []
+        # Turn
         self.turn_order: list[Faction] = None
+        self.cur_faction: int = 0
         # Load project data from file
         config_project: dict = config_data.get("project", {})
         self.project_filename: str = config_project.get("filename", DEFAULT_PROJECT)
@@ -65,15 +67,24 @@ class WwnApp(App):
         imgui.set_window_size(imgui.ImVec2(240, 410), cond=imgui.Cond_.first_use_ever)
 
         if self._turn_active():
-            for faction in self.turn_order:
-                imgui.text(f"{faction.initiative}: {faction.name}")
-            # TODO(orkaboy): End turn, next faction etc.
-            STYLE.button_color(STYLE.COL_RED)
-            if imgui.button("Abort Turn"):
+            if self.cur_faction >= len(self.factions):
                 self.turn_order = None
-            STYLE.pop_color()
+            else:
+                for idx, faction in enumerate(self.turn_order):
+                    if idx == self.cur_faction:
+                        imgui.text(f"{faction.initiative}: {faction.name} (CURRENT)")
+                    else:
+                        imgui.text(f"{faction.initiative}: {faction.name}")
+                # TODO(orkaboy): End turn, next faction etc.
+                if imgui.button("Skip turn"):
+                    self.cur_faction += 1
+                STYLE.button_color(STYLE.COL_RED)
+                if imgui.button("Abort Turn"):
+                    self.turn_order = None
+                STYLE.pop_color()
         else:
             if imgui.button("New Turn"):
+                self.cur_faction = 0
                 for faction in self.factions:
                     faction.roll_initiative()
                 self.turn_order = sorted(
