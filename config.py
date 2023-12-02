@@ -5,9 +5,9 @@ import logging
 import yaml
 
 try:
-    from yaml import CLoader as Loader
+    from yaml import CDumper as Dumper, CLoader as Loader
 except ImportError:
-    from yaml import Loader
+    from yaml import Dumper, Loader
 
 logger = logging.getLogger(__name__)
 
@@ -32,3 +32,14 @@ def open_yaml(filename: str) -> dict:
     except Exception:
         logger.info(f"Didn't find file {filename}, using default values.")
         return {}
+
+
+def write_yaml(filename: str, data: dict) -> None:
+    """Write dictionary to file."""
+    with open(filename, mode="w", encoding="utf-8") as yaml_file:
+        try:
+            return yaml.dump(data, yaml_file, Dumper=Dumper)
+        except Exception:
+            logger.error(f"Error: Failed to write to file {filename}")
+            logger.exception()
+            return {}

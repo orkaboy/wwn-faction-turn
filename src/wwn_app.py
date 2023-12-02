@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from imgui_bundle import imgui
 
-from config import open_yaml
+from config import open_yaml, write_yaml
 from src.app import App
 from src.faction import Faction
 from src.layout_helper import LayoutHelper
@@ -28,8 +28,8 @@ class WwnApp(App):
         self.turn_order: list[Faction] = None
         # Load project data from file
         config_project: dict = config_data.get("project", {})
-        config_filename: str = config_project.get("filename", DEFAULT_PROJECT)
-        self.project_data = open_yaml(config_filename)
+        self.project_filename: str = config_project.get("filename", DEFAULT_PROJECT)
+        self.project_data = open_yaml(self.project_filename)
 
     def _turn_active(self: Self) -> bool:
         return self.turn_order is not None
@@ -39,6 +39,14 @@ class WwnApp(App):
         self.faction_window()
         self.location_window()
         self.turn_window()
+
+    def save_project(self: Self) -> None:
+        """Save project to file."""
+        data = {
+            "factions": self.factions,
+            "locations": self.locations,
+        }
+        write_yaml(filename=self.project_filename, data=data)
 
     def turn_window(self: Self) -> None:
         """Draw turn logic GUI."""
@@ -55,12 +63,17 @@ class WwnApp(App):
             if imgui.button("Abort Turn"):
                 self.turn_order = None
             STYLE.pop_color()
-        elif imgui.button("New Turn"):
-            for faction in self.factions:
-                faction.roll_initiative()
-            self.turn_order = sorted(
-                self.factions.copy(), key=lambda faction: faction.initiative, reverse=True
-            )
+        else:
+            if imgui.button("New Turn"):
+                for faction in self.factions:
+                    faction.roll_initiative()
+                self.turn_order = sorted(
+                    self.factions.copy(), key=lambda faction: faction.initiative, reverse=True
+                )
+            # Save project to file
+            _, self.project_filename = imgui.input_text(label="Filename", str=self.project_filename)
+            if imgui.button("Save project"):
+                self.save_project()
 
         imgui.end()
 
