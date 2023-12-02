@@ -16,14 +16,19 @@ CONFIG_FILE_PATH = "config.yaml"
 
 def open_config() -> dict:
     """Open the config file and parse the yaml contents."""
+    return open_yaml(CONFIG_FILE_PATH)
+
+
+def open_yaml(filename: str) -> dict:
+    """Open the yaml file and parse its contents."""
     try:
-        with open(CONFIG_FILE_PATH, encoding="utf-8") as config_file:
+        with open(filename, encoding="utf-8") as yaml_file:
             try:
-                return yaml.load(config_file, Loader=Loader)
+                return yaml.load(yaml_file, Loader=Loader)
             except Exception:
-                logger.error(f"Error: Failed to parse config file {CONFIG_FILE_PATH}")
+                logger.error(f"Error: Failed to parse file {filename}")
                 logger.exception()
                 return {}
     except Exception:
-        logger.info(f"Didn't find config file {CONFIG_FILE_PATH}, using default values for run.")
+        logger.info(f"Didn't find file {filename}, using default values.")
         return {}

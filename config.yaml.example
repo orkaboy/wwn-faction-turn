@@ -10,3 +10,8 @@ logging:
   verbosity       : DEBUG     # Verbosity of log messages in the console.
                               # Valid log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
                               # Log files are also written to the Logs folder.
+
+# Project
+project:
+  filename        : "Project/wwn.yaml"
+  logfile         : "Project/wwm.log"

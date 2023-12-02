@@ -14,7 +14,6 @@ logging:
 ```
 """
 
-import datetime
 import logging
 from logging import LogRecord
 from typing import Self
@@ -22,6 +21,9 @@ from typing import Self
 # Python has a logging library that will do what we want.
 # Basic documentation here:     https://docs.python.org/3/howto/logging.html
 # Advanced documentation here:  https://docs.python.org/3/howto/logging-cookbook.html
+
+
+DEFAULT_LOGFILE = "Project/wwn.log"
 
 
 class ColorFormatter(logging.Formatter):
@@ -65,18 +67,15 @@ def initialize_logging(config_data: dict) -> None:
     # Log file specific format
     file_log_fmt = "[%(asctime)s] %(name)-16s %(levelname)-8s %(message)s"
     file_log_formatter = ColorFormatter(fmt=file_log_fmt)
-    # Get current time in order to create log file name
-    time_now = datetime.datetime.now()
-    time_str = (
-        f"{time_now.year}{time_now.month:02d}{time_now.day:02d}_"
-        + f"{time_now.hour:02d}_{time_now.minute:02d}_{time_now.second:02d}"
-    )
 
+    config_project: dict = config_data.get("project", {})
+    logfile = config_project.get("logfile", DEFAULT_LOGFILE)
     # Set up logging to file
     logging.basicConfig(
-        filename=f"Logs/wwn_faction_turn_Log_{time_str}.txt",
-        filemode="w",  # Log everything in the file
+        filename=logfile,
+        filemode="a",  # Log everything in the file
         level=logging.DEBUG,
+        force=True,  # Restart everything in the logger (allows for reinit)
     )
     # Apply non-colored, file-specific formatter to file output
     logging.getLogger("").root.handlers[0].setFormatter(file_log_formatter)

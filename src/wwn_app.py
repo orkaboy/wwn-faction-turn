@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from imgui_bundle import imgui
 
+from config import open_yaml
 from src.app import App
 from src.faction import Faction
 from src.layout_helper import LayoutHelper
@@ -11,6 +12,9 @@ from src.location import Location
 from src.style import STYLE
 
 logger = logging.getLogger(__name__)
+
+
+DEFAULT_PROJECT = "Project/wwn.yaml"
 
 
 class WwnApp(App):
@@ -22,6 +26,10 @@ class WwnApp(App):
         self.factions: list[Faction] = []
         self.locations: list[Location] = []
         self.turn_order: list[Faction] = None
+        # Load project data from file
+        config_project: dict = config_data.get("project", {})
+        config_filename: str = config_project.get("filename", DEFAULT_PROJECT)
+        self.project_data = open_yaml(config_filename)
 
     def _turn_active(self: Self) -> bool:
         return self.turn_order is not None

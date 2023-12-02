@@ -5,8 +5,8 @@ __pycache__
 imgui.ini
 config.yaml
 
-# Logs
-Logs
+# Project files/logs
+Project
 
 # Ruff output
 report.json
