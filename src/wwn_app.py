@@ -1,3 +1,4 @@
+import logging
 from typing import Self
 from uuid import uuid4
 
@@ -8,6 +9,8 @@ from src.faction import Faction
 from src.layout_helper import LayoutHelper
 from src.location import Location
 from src.style import STYLE
+
+logger = logging.getLogger(__name__)
 
 
 class WwnApp(App):

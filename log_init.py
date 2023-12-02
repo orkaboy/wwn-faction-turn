@@ -24,7 +24,7 @@ from typing import Self
 # Advanced documentation here:  https://docs.python.org/3/howto/logging-cookbook.html
 
 
-class DeltaTimeFormatter(logging.Formatter):
+class ColorFormatter(logging.Formatter):
     """
     Create a custom formatter for the timestamp.
 
@@ -48,17 +48,7 @@ class DeltaTimeFormatter(logging.Formatter):
     }
 
     def format(self: Self, record: LogRecord) -> str:
-        """Add colors and a timestamp to the logging output."""
-        # Create a timestamp we can use to parse,
-        # using the millisecond timestamp since start of program / 1000
-        duration = datetime.datetime.utcfromtimestamp(record.relativeCreated / 1000)
-        # Create the delta property, with the format 'HH:MM:SS.sss'
-        record.delta_ms = (
-            f"{duration.strftime('%H:%M:%S')}.{int(duration.strftime('%f')) // 1000:03d}"
-        )
-        # Latter part may be removed if we are not interested in milliseconds,
-        # or replaced with %f if we want microseconds.
-        record.delta = f"{duration.strftime('%H:%M:%S')}.{int(duration.strftime('%f')) // 1000:03d}"
+        """Add colors to the logging output."""
         record.color = self.COLOR.get(record.levelno)
         record.color_reset = self.reset
         return super().format(record)
@@ -67,14 +57,14 @@ class DeltaTimeFormatter(logging.Formatter):
 def initialize_logging(config_data: dict) -> None:
     """Call once in main, before any calls to the logging library."""
     # Defines the format of the colored logs
-    color_log_fmt = "%(color)s[%(delta)s] %(name)-16s %(levelname)-8s %(message)s%(color_reset)s"
-    color_log_formatter = DeltaTimeFormatter(fmt=color_log_fmt)
+    color_log_fmt = "%(color)s[%(asctime)s] %(name)-16s %(levelname)-8s %(message)s%(color_reset)s"
+    color_log_formatter = ColorFormatter(fmt=color_log_fmt)
     # Same format, but without the coloring
-    bw_log_fmt = "[%(delta)s] %(name)-16s %(levelname)-8s %(message)s"
-    bw_log_formatter = DeltaTimeFormatter(fmt=bw_log_fmt)
+    bw_log_fmt = "[%(asctime)s] %(name)-16s %(levelname)-8s %(message)s"
+    bw_log_formatter = ColorFormatter(fmt=bw_log_fmt)
     # Log file specific format
-    file_log_fmt = "[%(delta_ms)s] %(name)-16s %(levelname)-8s %(message)s"
-    file_log_formatter = DeltaTimeFormatter(fmt=file_log_fmt)
+    file_log_fmt = "[%(asctime)s] %(name)-16s %(levelname)-8s %(message)s"
+    file_log_formatter = ColorFormatter(fmt=file_log_fmt)
     # Get current time in order to create log file name
     time_now = datetime.datetime.now()
     time_str = (
