@@ -67,6 +67,18 @@ class Faction:
         """At the start of every faction turn, each faction rolls 1d8 for initiative, the highest rolls going first."""  # noqa: E501
         self.initiative = randint(1, 8)
 
+    def get_attribute(self: Self, attribute: AssetType) -> int:
+        """Return the value of an attribute, based on an AssetType."""
+        match attribute:
+            case AssetType.CUNNING:
+                return self.cunning
+            case AssetType.FORCE:
+                return self.force
+            case AssetType.WEALTH:
+                return self.wealth
+            case _:
+                return 0
+
     def roll_attribute(self: Self, attribute: AssetType) -> int:
         """Make a roll on an attribute, based on an AssetType."""
         match attribute:
