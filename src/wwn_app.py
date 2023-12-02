@@ -29,7 +29,7 @@ class WwnApp(App):
         # Load project data from file
         config_project: dict = config_data.get("project", {})
         self.project_filename: str = config_project.get("filename", DEFAULT_PROJECT)
-        self.project_data = open_yaml(self.project_filename)
+        self.open_project()
 
     def _turn_active(self: Self) -> bool:
         return self.turn_order is not None
@@ -40,8 +40,17 @@ class WwnApp(App):
         self.location_window()
         self.turn_window()
 
+    def open_project(self: Self) -> None:
+        """Load project from file."""
+        project_data = open_yaml(self.project_filename)
+        # TODO(orkaboy): Handle empty file and missing data
+        # TODO(orkaboy): Parse from data
+        self.factions = project_data.get("factions", [])
+        self.locations = project_data.get("locations", [])
+
     def save_project(self: Self) -> None:
         """Save project to file."""
+        # TODO(orkaboy): Fill in correct data
         data = {
             "factions": self.factions,
             "locations": self.locations,
@@ -74,6 +83,9 @@ class WwnApp(App):
             _, self.project_filename = imgui.input_text(label="Filename", str=self.project_filename)
             if imgui.button("Save project"):
                 self.save_project()
+            imgui.same_line()
+            if imgui.button("Load project"):
+                self.open_project()
 
         imgui.end()
 
