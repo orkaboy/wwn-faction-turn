@@ -12,6 +12,7 @@ from src.faction import Faction
 from src.layout_helper import LayoutHelper
 from src.location import Location
 from src.style import STYLE
+from src.system import QUALITY
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,8 @@ DEFAULT_PROJECT = "Project/wwn.yaml"
 
 class WwnApp(App):
     """Worlds Without Number specific App/GUI code."""
+
+    HIDE_ACTION_CUNNING_REQUIREMENT = 3
 
     class TurnFSM(Enum):
         IDLE = auto()
@@ -47,6 +50,7 @@ class WwnApp(App):
         super().__init__(config_data, title="Worlds Without Number - Faction Turn")
         self.factions: list[Faction] = []
         self.locations: list[Location] = []
+        self.turn: int = 0
         # Turn
         self.turn_order: list[Faction] = None
         self.cur_faction: int = 0
@@ -73,6 +77,7 @@ class WwnApp(App):
         # TODO(orkaboy): Parse from data
         self.factions = project_data.get("factions", [])
         self.locations = project_data.get("locations", [])
+        self.turn = project_data.get("turn", 0)
 
     def save_project(self: Self) -> None:
         """Save project to file."""
@@ -80,6 +85,7 @@ class WwnApp(App):
         data = {
             "factions": self.factions,
             "locations": self.locations,
+            "turn": self.turn,
         }
         write_yaml(filename=self.project_filename, data=data)
 
@@ -130,7 +136,12 @@ class WwnApp(App):
                         if (
                             asset.is_initialized()
                         ):  # Avoid crashing if asset.prototype isn't defined
-                            imgui.text(f"{asset.name} (upkeep: {asset.prototype.upkeep()})")
+                            imgui.text(
+                                f"{asset.name} (upkeep: {asset.prototype.upkeep()}), location: {asset.loc}"  # noqa: E501
+                            )
+                            LayoutHelper.add_tooltip(
+                                f"{asset.desc}\n\n{asset.prototype.strings.rules}"
+                            )
                 LayoutHelper.add_spacer()
                 total_upkeep = asset_upkeep + asset_total_excess
                 imgui.text(
@@ -143,7 +154,88 @@ class WwnApp(App):
                 imgui.text_wrapped(
                     "3. The faction triggers any special abilities individual Assets may have, such as abilities that allow an Asset to move or perform some other special benefit."  # noqa: E501
                 )
+                for asset in faction.assets:
+                    if asset.is_initialized():  # Avoid crashing if asset.prototype isn't defined
+                        imgui.text(f"{asset.name}, location: {asset.loc}")
+                        LayoutHelper.add_tooltip(f"{asset.desc}\n\n{asset.prototype.strings.rules}")
+                        if QUALITY.Action in asset.qualities:
+                            imgui.same_line()
+                            imgui.text("ACTION")
+                        if QUALITY.Special in asset.qualities:
+                            imgui.same_line()
+                            imgui.text("SPECIAL")
+                LayoutHelper.add_spacer()
+                if imgui.button("Done with special actions"):
+                    self.state = WwnApp.TurnFSM.MAIN_ACTION
+            case WwnApp.TurnFSM.MAIN_ACTION:
+                imgui.text_wrapped(
+                    "4. The faction takes one Faction Action as listed below, resolving any Attacks or other consequences from their choice. When an action is taken, every Asset owned by the faction may take it; thus, if Attack is chosen, then every valid Asset owned by the faction can Attack. If Repair Asset is chosen, every Asset can be repaired if enough Treasure is spent."  # noqa: E501
+                )
+
+                no_assets = len(faction.assets) == 0
+
+                if no_assets:
+                    imgui.begin_disabled()
+
+                if imgui.button("Attack"):
+                    self.state = WwnApp.TurnFSM.ACTION_ATTACK
+                if no_assets:
+                    LayoutHelper.add_tooltip("No assets to attack with.")
+
+                if imgui.button("Move Asset"):
+                    self.state = WwnApp.TurnFSM.ACTION_MOVE_ASSET
+                if no_assets:
+                    LayoutHelper.add_tooltip("No assets to move.")
+
+                if imgui.button("Repair Asset"):
+                    self.state = WwnApp.TurnFSM.ACTION_REPAIR_ASSET
+
+                if no_assets:
+                    LayoutHelper.add_tooltip("No assets to repair.")
+                    imgui.end_disabled()
+
+                if imgui.button("Expand Influence"):
+                    self.state = WwnApp.TurnFSM.ACTION_EXPAND_INFLUENCE
+                if imgui.button("Create Asset"):
+                    self.state = WwnApp.TurnFSM.ACTION_CREATE_ASSET
+                # Hide is an action available only to factions with a Cunning score of 3 or better
+                can_hide = faction.cunning >= WwnApp.HIDE_ACTION_CUNNING_REQUIREMENT
+                if not can_hide:
+                    imgui.begin_disabled()
+                if imgui.button("Hide Asset"):
+                    self.state = WwnApp.TurnFSM.ACTION_HIDE_ASSET
+                if not can_hide:
+                    LayoutHelper.add_tooltip("Faction must have a Cunning score of 3 or higher.")
+                    imgui.end_disabled()
+                # Only allow Sell Asset if the faction has assets
+
+                if no_assets:
+                    imgui.begin_disabled()
+                if imgui.button("Sell Asset"):
+                    self.state = WwnApp.TurnFSM.ACTION_SELL_ASSET
+                if no_assets:
+                    LayoutHelper.add_tooltip("No assets to sell.")
+                    imgui.end_disabled()
+
+                if imgui.button("Skip Main Action"):
+                    self.state = WwnApp.TurnFSM.CHECK_GOAL
+                LayoutHelper.add_tooltip("Skip the faction's main action this turn.")
             # TODO(orkaboy): continue
+
+            # TODO(orkaboy): continue
+            case WwnApp.TurnFSM.CHECK_GOAL:
+                imgui.text_wrapped(
+                    "The faction checks to see if it's accomplished its most recent goal. If so, it collects the experience points for doing so and picks a new goal. If not, it can abandon the old goal and pick a new one, but it will sacrifice its next turn's Faction Action to do so and may not trigger any Asset special abilities that round, either."  # noqa: E501
+                )
+                LayoutHelper.add_spacer()
+
+                # TODO(orkaboy): Goals
+                imgui.text(f"Current goal: {'TODO'}")
+
+                if imgui.button("Complete goal"):
+                    pass
+                if imgui.button("Change goal"):
+                    pass
 
     def turn_window(self: Self) -> None:
         """Draw turn logic GUI."""
@@ -152,6 +244,7 @@ class WwnApp(App):
         imgui.set_window_pos("Turn", imgui.ImVec2(245, 5), imgui.Cond_.first_use_ever)
         imgui.set_window_size(imgui.ImVec2(240, 410), cond=imgui.Cond_.first_use_ever)
 
+        imgui.text(f"Turn {self.turn}")
         if self._turn_active():
             # Print out the turn order and progress
             imgui.text("TURN ORDER:")
@@ -183,6 +276,7 @@ class WwnApp(App):
                     self.factions.copy(), key=lambda faction: faction.initiative, reverse=True
                 )
                 self.state = WwnApp.TurnFSM.IDLE
+                self.turn += 1
             # Save project to file
             _, self.project_filename = imgui.input_text(label="Filename", str=self.project_filename)
             if imgui.button("Save project"):

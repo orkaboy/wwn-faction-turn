@@ -177,6 +177,9 @@ class Faction:
         _, self.treasure = imgui.input_int(
             label=f"Treasure##{idx}", v=self.treasure, flags=imgui.InputTextFlags_.chars_decimal
         )
+        _, self.exp = imgui.input_int(
+            label=f"Exp##{idx}", v=self.exp, flags=imgui.InputTextFlags_.chars_decimal
+        )
         LayoutHelper.add_spacer()
         # Render Tags
         tags_open = imgui.collapsing_header(
