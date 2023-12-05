@@ -174,6 +174,7 @@ class WwnApp(App):
 
                 no_assets = len(faction.assets) == 0
 
+                # Only allow Attack, Move Asset, Repair Asset if the faction has assets
                 if no_assets:
                     imgui.begin_disabled()
 
@@ -207,8 +208,8 @@ class WwnApp(App):
                 if not can_hide:
                     LayoutHelper.add_tooltip("Faction must have a Cunning score of 3 or higher.")
                     imgui.end_disabled()
-                # Only allow Sell Asset if the faction has assets
 
+                # Only allow Sell Asset if the faction has assets
                 if no_assets:
                     imgui.begin_disabled()
                 if imgui.button("Sell Asset"):
