@@ -1,3 +1,4 @@
+from copy import copy
 from random import randint
 from typing import Self
 from uuid import uuid4
@@ -5,9 +6,12 @@ from uuid import uuid4
 from imgui_bundle import imgui
 
 from src.asset import Asset
+from src.base_of_influence import BaseOfInfluence
+from src.goal import Goal
 from src.layout_helper import LayoutHelper
+from src.location import Location
 from src.style import STYLE
-from src.system import AssetType, MagicLevel
+from src.system import AssetType, MagicLevel, goals_list
 from src.tag import Tag
 
 
@@ -50,10 +54,16 @@ class Faction:
         self.treasure: int = 0
         self.hp: int = self.max_hp()
         self.initiative: int = 0
+        self.goal: Goal = None
+        self.notes: str = ""
         # Asset tracking
         self.assets: list[Asset] = []
+        self.bases: list[BaseOfInfluence] = []
         # Tags tracking
         self.tags: list[Tag] = []
+
+    def __repr__(self: Self) -> str:
+        return self.name
 
     def max_hp(self: Self) -> int:
         """Calculate faction max hp."""
@@ -144,7 +154,7 @@ class Faction:
             return nr_assets - limit
         return 0
 
-    def render(self: Self, idx: int) -> None:
+    def render(self: Self, idx: int, locations: list[Location]) -> None:
         """Render faction in GUI."""
         _, self.name = imgui.input_text(label=f"Name##{idx}", str=self.name)
         _, self.desc = imgui.input_text_multiline(label=f"Description##{idx}", str=self.desc)
@@ -180,6 +190,9 @@ class Faction:
         _, self.exp = imgui.input_int(
             label=f"Exp##{idx}", v=self.exp, flags=imgui.InputTextFlags_.chars_decimal
         )
+        _, self.notes = imgui.input_text_multiline(
+            label=f"Faction Notes##Faction_{self.uuid}", str=self.notes
+        )
         LayoutHelper.add_spacer()
         # Render Tags
         tags_open = imgui.collapsing_header(
@@ -204,6 +217,69 @@ class Faction:
                 self.tags.pop(rm_tag)
 
         LayoutHelper.add_spacer()
+        # Goals
+        imgui.text("CURRENT GOAL:")
+        if self.goal:
+            self.goal.render(f"Fact_{self.uuid}")
+            STYLE.button_color(STYLE.COL_RED)
+            if imgui.button(f"Clear goal##{idx}"):
+                self.goal = None
+            STYLE.pop_color()
+        elif imgui.begin_combo(label="Set Goal##Turn", preview_value="Set faction goal"):
+            for goal in goals_list():
+                _, selected = imgui.selectable(
+                    label=f"{goal.name}##Fact_{self.uuid}",
+                    p_selected=False,
+                )
+                LayoutHelper.add_tooltip(goal.desc)
+                if selected:
+                    self.goal = copy(goal)
+            imgui.end_combo()
+
+        LayoutHelper.add_spacer()
+
+        imgui.text("BASES OF INFLUENCE")
+        if imgui.button(f"Add Base##{idx}"):
+            self.bases.append(
+                BaseOfInfluence(uuid=uuid4().hex, owner=self.uuid, location=None, max_hp=0)
+            )
+        rm_boi = -1
+        for boi_idx, base in enumerate(self.bases):
+            boi_open, boi_retain = imgui.collapsing_header(
+                f"  {base.location}##{base.uuid}",
+                True,
+                flags=imgui.TreeNodeFlags_.default_open,
+            )
+            if boi_open and boi_retain:
+                # Location
+                if imgui.begin_combo(
+                    label=f"Location##{base.uuid}", preview_value="Set base Location"
+                ):
+                    for loc in locations:
+                        _, selected = imgui.selectable(
+                            label=f"{loc}##{loc.uuid}",
+                            p_selected=False,
+                        )
+                        LayoutHelper.add_tooltip(loc.desc)
+                        if selected:
+                            if base.location:
+                                base.location.bases.remove(base)
+                            base.location = loc
+                            loc.bases.append(base)
+                    imgui.end_combo()
+
+                _, base.hp = imgui.input_int(label=f"HP##{base.uuid}", v=base.hp)
+                _, base.max_hp = imgui.input_int(label=f"Max HP##{base.uuid}", v=base.max_hp)
+                _, base.desc = imgui.input_text_multiline(
+                    label=f"Description##{base.uuid}",
+                    str=base.desc,
+                )
+            elif not boi_retain:
+                rm_boi = boi_idx
+        if rm_boi != -1:
+            self.bases.pop(rm_boi)
+        LayoutHelper.add_spacer()
+
         imgui.text("ASSETS")
         # Render Assets
         rm_asset = ""
@@ -223,12 +299,12 @@ class Faction:
                 # Iterate over all assets, by type
                 for asset_idx, asset in enumerate(assets):
                     asset_open, asset_retain = imgui.collapsing_header(
-                        f"  {asset.name()}##{idx}_{type_idx}_{asset_idx}",
+                        f"  {asset}##{idx}_{type_idx}_{asset_idx}",
                         True,
                         flags=imgui.TreeNodeFlags_.default_open,
                     )
                     if asset_open and asset_retain:
-                        asset.render(f"{idx}_{type_idx}_{asset_idx}")
+                        asset.render(f"{idx}_{type_idx}_{asset_idx}", locations)
                     elif not asset_retain:
                         rm_asset = asset.uuid
             if type_idx < 3 - 1:

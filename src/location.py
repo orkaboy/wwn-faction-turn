@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Any, Self
 
 
 class Location:
@@ -6,7 +6,8 @@ class Location:
         self.name = name
         self.uuid = uuid
         self.desc: str = ""
-        self.asset_ids: list[str] = []
+        self.assets: list[Any] = []
+        self.bases: list[Any] = []
 
     def __repr__(self: Self) -> str:
         return self.name

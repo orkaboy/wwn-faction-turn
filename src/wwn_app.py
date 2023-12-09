@@ -1,5 +1,7 @@
 import logging
+from copy import copy
 from enum import Enum, auto
+from math import ceil, floor
 from typing import Self
 from uuid import uuid4
 
@@ -7,12 +9,13 @@ from imgui_bundle import imgui
 
 from config import open_yaml, write_yaml
 from src.app import App
-from src.asset import AssetType
+from src.asset import Asset, AssetType
+from src.base_of_influence import BaseOfInfluence
 from src.faction import Faction
 from src.layout_helper import LayoutHelper
 from src.location import Location
 from src.style import STYLE
-from src.system import QUALITY
+from src.system import QUALITY, goals_list
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +27,7 @@ class WwnApp(App):
     """Worlds Without Number specific App/GUI code."""
 
     HIDE_ACTION_CUNNING_REQUIREMENT = 3
+    HIDE_ACTION_COST = 2
 
     class TurnFSM(Enum):
         IDLE = auto()
@@ -137,7 +141,7 @@ class WwnApp(App):
                             asset.is_initialized()
                         ):  # Avoid crashing if asset.prototype isn't defined
                             imgui.text(
-                                f"{asset.name} (upkeep: {asset.prototype.upkeep()}), location: {asset.loc}"  # noqa: E501
+                                f"{asset} (upkeep: {asset.prototype.upkeep()}), location: {asset.loc}"  # noqa: E501
                             )
                             LayoutHelper.add_tooltip(
                                 f"{asset.desc}\n\n{asset.prototype.strings.rules}"
@@ -156,7 +160,7 @@ class WwnApp(App):
                 )
                 for asset in faction.assets:
                     if asset.is_initialized():  # Avoid crashing if asset.prototype isn't defined
-                        imgui.text(f"{asset.name}, location: {asset.loc}")
+                        imgui.text(f"{asset}, location: {asset.loc}")
                         LayoutHelper.add_tooltip(f"{asset.desc}\n\n{asset.prototype.strings.rules}")
                         if QUALITY.Action in asset.qualities:
                             imgui.same_line()
@@ -221,22 +225,194 @@ class WwnApp(App):
                 if imgui.button("Skip Main Action"):
                     self.state = WwnApp.TurnFSM.CHECK_GOAL
                 LayoutHelper.add_tooltip("Skip the faction's main action this turn.")
-            # TODO(orkaboy): continue
 
-            # TODO(orkaboy): continue
+            case (
+                WwnApp.TurnFSM.ACTION_ATTACK
+                | WwnApp.TurnFSM.ACTION_MOVE_ASSET
+                | WwnApp.TurnFSM.ACTION_REPAIR_ASSET
+                | WwnApp.TurnFSM.ACTION_EXPAND_INFLUENCE
+                | WwnApp.TurnFSM.ACTION_CREATE_ASSET
+                | WwnApp.TurnFSM.ACTION_HIDE_ASSET
+                | WwnApp.TurnFSM.ACTION_SELL_ASSET
+            ):
+                self.main_action()
+
+                LayoutHelper.add_spacer()
+
+                if imgui.button(label="Back##Action"):
+                    self.state = WwnApp.TurnFSM.MAIN_ACTION
+                if imgui.button(label="Done##Action"):
+                    self.state = WwnApp.TurnFSM.CHECK_GOAL
+
             case WwnApp.TurnFSM.CHECK_GOAL:
                 imgui.text_wrapped(
                     "The faction checks to see if it's accomplished its most recent goal. If so, it collects the experience points for doing so and picks a new goal. If not, it can abandon the old goal and pick a new one, but it will sacrifice its next turn's Faction Action to do so and may not trigger any Asset special abilities that round, either."  # noqa: E501
                 )
                 LayoutHelper.add_spacer()
 
-                # TODO(orkaboy): Goals
-                imgui.text(f"Current goal: {'TODO'}")
+                # Goals
+                imgui.text("CURRENT GOAL:")
+                if faction.goal:
+                    faction.goal.render(f"Turn_{faction.uuid}")
+                    if imgui.button("Complete goal"):
+                        faction.exp += faction.goal.difficulty
+                        faction.goal = None
+                elif imgui.begin_combo(label="Set Goal##Turn", preview_value="Set faction goal"):
+                    for goal in goals_list():
+                        _, selected = imgui.selectable(
+                            label=f"{goal.name}##Turn_{faction.uuid}",
+                            p_selected=False,
+                        )
+                        LayoutHelper.add_tooltip(goal.desc)
+                        if selected:
+                            faction.goal = copy(goal)
+                    imgui.end_combo()
+                STYLE.button_color(STYLE.COL_RED)
+                if faction.goal and imgui.button("Abort goal"):
+                    # TODO(orkaboy): Mark as paralyzed next turn
+                    faction.goal = None
+                STYLE.pop_color()
 
-                if imgui.button("Complete goal"):
-                    pass
-                if imgui.button("Change goal"):
-                    pass
+                LayoutHelper.add_spacer()
+                # TODO(orkaboy): Upgrade stats for exp
+                LayoutHelper.add_spacer()
+
+                if imgui.button("COMPLETE TURN##Turn"):
+                    self.state = WwnApp.TurnFSM.NEXT_FACTION
+
+    def main_action(self: Self) -> None:
+        """Display main action part of statemachine."""
+        faction = self.factions[self.cur_faction]
+
+        # TODO(orkaboy): continue
+        match self.state:
+            case WwnApp.TurnFSM.ACTION_ATTACK:
+                imgui.text("ATTACK:")
+                imgui.text_wrapped(
+                    """The faction nominates one or more Assets to attack the enemy in their locations. In each location, the defender chooses which of the Assets present will meet the Attack; thus, if a unit of Infantry attacks in a location where there is an enemy Base of Influence, Informers, and Idealistic Thugs, the defender could decide to use Idealistic Thugs to defend against the attack.
+The attacker makes an attribute check based on the attack of the acting Asset; thus, the Infantry would roll Force versus Force. On a success, the defending Asset takes damage equal to the attacking Asset's attack score, or 1d8 in the case of Infantry. On a failure, the attacking Asset takes damage equal to the defending Asset's counterattack score, or 1d6 in the case of Idealistic Thugs.
+If the damage done to an Asset reduces it to zero hit points, it is destroyed. The same Asset may be used to defend against multiple attacking Assets, provided it can survive the onslaught.
+Damage done to a Base of Influence is also done directly to the faction's hit points. Overflow damage is not transmitted, however; if the Base of Influence only has 5 hit points and 7 hit points are inflicted, the faction loses the Base of Influence and 5 hit points from its total."""  # noqa: E501
+                )
+
+                # TODO(orkaboy): continue
+            case WwnApp.TurnFSM.ACTION_MOVE_ASSET:
+                imgui.text("MOVE ASSET:")
+                imgui.text_wrapped(
+                    """One or more Assets are moved up to one turn's worth of movement each. The receiving location must not have the ability and inclination to forbid the Asset from operating there. Subtle and Stealthed Assets ignore this limit.
+If an asset loses the Subtle or Stealth qualities while in a hostile location, they must use this action to retreat to safety within one turn or they will take half their maximum hit points in damage at the start of the next turn, rounded up."""  # noqa: E501
+                )
+
+                # TODO(orkaboy): continue
+            case WwnApp.TurnFSM.ACTION_REPAIR_ASSET:
+                imgui.text("REPAIR ASSET:")
+                imgui.text_wrapped(
+                    """The faction spends 1 Treasure on each Asset they wish to repair, fixing half their relevant attribute value in lost hit points, rounded up. Thus, fixing a Force Asset would heal half the faction's Force attribute, rounded up. Additional healing can be applied to an Asset in this same turn, but the cost increases by 1 Treasure for each subsequent fix; thus, the second costs 2 Treasure, the third costs 3 Treasure, and so forth.
+This ability can at the same time also be used to repair damage done to the faction, spending 1 Treasure to heal a total equal to the faction's highest and lowest Force, Wealth, or Cunning attribute divided by two, rounded up. Thus, a faction with a Force of 5, Wealth of 2, and Cunning of 4 would heal 4 points of damage. Only one such application of healing is possible for a faction each turn."""  # noqa: E501
+                )
+
+                for asset in faction.assets:
+                    if not asset.is_initialized():
+                        continue
+
+                    full_hp: bool = asset.hp == asset.max_hp()
+                    if not full_hp:
+                        asset.render_brief()
+                        imgui.same_line()
+                        attribute = faction.get_attribute(asset.prototype.type)
+                        repair_amount = ceil(attribute / 2)
+                        # TODO(orkaboy): Multiple repairs cost more during same turn!
+                        repair_cost = 1
+                        disabled = faction.treasure < repair_cost
+                        if disabled:
+                            imgui.begin_disabled()
+                        if imgui.button(label=f"Repair##{asset.uuid}"):
+                            faction.treasure -= repair_cost
+                            asset.hp = min(asset.max_hp(), asset.hp + repair_amount)
+                        LayoutHelper.add_tooltip(
+                            f"Repair up to {repair_amount} HP on Asset for {repair_cost} Treasure"
+                        )
+                        if disabled:
+                            imgui.end_disabled()
+
+                # Repair faction button
+                high_attr = max(faction.cunning, faction.force, faction.wealth)
+                low_attr = min(faction.cunning, faction.force, faction.wealth)
+                repair_amount = ceil((high_attr + low_attr) / 2)
+                repair_cost = 1
+                # TODO(orkaboy): Only available once per turn
+                disabled = faction.treasure < repair_cost
+                if disabled:
+                    imgui.begin_disabled()
+                if imgui.button("Repair faction"):
+                    faction.treasure -= repair_cost
+                    faction.hp = min(faction.max_hp(), faction.hp + repair_amount)
+                LayoutHelper.add_tooltip(
+                    f"Repair faction for up to {repair_amount} HP, for {repair_cost} Treasure"
+                )
+                if disabled:
+                    imgui.end_disabled()
+
+            case WwnApp.TurnFSM.ACTION_EXPAND_INFLUENCE:
+                imgui.text("EXPAND INFLUENCE:")
+                imgui.text_wrapped(
+                    """The faction seeks to establish a new base of operations in a location. The faction must have at least one Asset there already to make this attempt, and must spend 1 Treasure for each hit point the new Base of Influence is to have. Thus, to create a new Base of Influence with a maximum hit point total of 10, 10 Treasure must be spent. Bases with high maximum hit point totals are harder to dislodge, but losing them also inflicts much more damage on the faction's own hit points.
+Once the Base of Influence is created, the owner makes a Cunning versus Cunning attribute check against every other faction that has at least one Asset in the same location. If the other faction wins the check, they are allowed to make an immediate Attack against the new Base of Influence with whatever Assets they have present in the location. The creating faction may attempt to block this action by defending with other Assets present.
+If the Base of Influence survives this onslaught, it operates as normal and allows the faction to purchase new Assets there with the Create Asset action."""  # noqa: E501
+                )
+                # TODO(orkaboy): continue
+            case WwnApp.TurnFSM.ACTION_CREATE_ASSET:
+                imgui.text("CREATE ASSET:")
+                imgui.text_wrapped(
+                    """The faction buys one Asset at a location where they have a Base of Influence. They must have the minimum attribute and Magic ratings necessary to buy the Asset and must pay the listed cost in Treasure to build it. A faction can create only one Asset per turn.
+A faction can have no more Assets of a particular attribute than their attribute score. Thus, a faction with a Force of 3 can have only 3 Force Assets. If this number is exceeded, the faction must pay 1 Treasure per excess Asset at the start of each turn, or else they will lose the excess."""  # noqa: E501
+                )
+                # TODO(orkaboy): continue
+            case WwnApp.TurnFSM.ACTION_HIDE_ASSET:
+                imgui.text("HIDE ASSET:")
+                imgui.text_wrapped(
+                    "An action available only to factions with a Cunning score of 3 or better, this action allows the faction to give one owned Asset the Stealth quality for every 2 Treasure they spend. Assets currently in a location with another faction's Base of Influence can't be hidden. If the Asset later loses the Stealth, no refund is given."  # noqa: E501
+                )
+
+                for asset in faction.assets:
+                    if not asset.is_initialized():
+                        continue
+
+                    if QUALITY.Stealth not in asset.qualities:
+                        asset.render_brief()
+                        imgui.same_line()
+                        # TODO(orkaboy): Disable if rival faction has Base of Influence in location
+                        disabled = faction.treasure < WwnApp.HIDE_ACTION_COST
+                        if disabled:
+                            imgui.begin_disabled()
+                        if imgui.button(label=f"Add Stealth for 2 Treasure##{asset.uuid}"):
+                            faction.treasure -= WwnApp.HIDE_ACTION_COST
+                            asset.qualities.append(QUALITY.Stealth)
+                        if disabled:
+                            LayoutHelper.add_tooltip("Cannot afford to add Stealth to asset.")
+                            imgui.end_disabled()
+            case WwnApp.TurnFSM.ACTION_SELL_ASSET:
+                imgui.text("SELL ASSET:")
+                imgui.text_wrapped(
+                    "The faction voluntarily decommissions an Asset, salvaging it for what it's worth. The Asset is lost and the faction gains half its purchase cost in Treasure, rounded down. If the Asset is damaged when it is sold, however, no Treasure is gained."  # noqa: E501
+                )
+
+                rm_asset = -1
+                for idx, asset in enumerate(faction.assets):
+                    if not asset.is_initialized():
+                        continue
+
+                    asset.render_brief()
+                    full_hp: bool = asset.hp == asset.max_hp()
+                    sell_price: int = floor(asset.prototype.requirements.cost / 2) if full_hp else 0
+                    imgui.same_line()
+                    if imgui.button(f"Sell Asset for {sell_price} Treasure##{asset.uuid}"):
+                        faction.treasure += sell_price
+                        rm_asset = idx
+                if rm_asset != -1:
+                    faction.assets.pop(rm_asset)
+            case _:
+                imgui.text("ERROR STATE")
 
     def turn_window(self: Self) -> None:
         """Draw turn logic GUI."""
@@ -259,6 +435,9 @@ class WwnApp(App):
             LayoutHelper.add_spacer()
             self.turn_logic()
             LayoutHelper.add_spacer()
+            _, faction.notes = imgui.input_text_multiline(
+                label=f"Faction Notes##Turn_{faction.uuid}", str=faction.notes
+            )
 
             # End turn, next faction etc.
             STYLE.button_color(STYLE.COL_RED)
@@ -305,21 +484,30 @@ class WwnApp(App):
             )
 
             if loc_open and loc_retain:
-                _, loc.name = imgui.input_text(label="Name", str=loc.name)
-                _, loc.desc = imgui.input_text_multiline(label="Description", str=loc.desc)
-                imgui.text("ASSETS:")
-                for asset_id in loc.asset_ids:
-                    asset = None
+                _, loc.name = imgui.input_text(label=f"Name##Loc_{loc.uuid}", str=loc.name)
+                _, loc.desc = imgui.input_text_multiline(
+                    label=f"Description##Loc_{loc.uuid}", str=loc.desc
+                )
+                imgui.text("BASES:")
+                for base_cast in loc.bases:
+                    base: BaseOfInfluence = base_cast
+                    base_owner: Faction = None
                     for faction in self.factions:
-                        for f_asset in faction.assets:
-                            if asset_id == f_asset.uuid:
-                                asset = f_asset
-                                break
-                        if asset:
+                        if faction.uuid == base.owner:
+                            base_owner = faction
                             break
-                    if asset:
-                        imgui.text(asset.name())
-                        LayoutHelper.add_tooltip(text=asset.desc)
+                    imgui.text(f"{base_owner} ({base.hp}/{base.max_hp})")
+                    LayoutHelper.add_tooltip(text=base.desc)
+                imgui.text("ASSETS:")
+                for asset_cast in loc.assets:
+                    asset: Asset = asset_cast
+                    asset_owner: Faction = None
+                    for faction in self.factions:
+                        if faction.uuid == asset.owner:
+                            asset_owner = faction
+                            break
+                    imgui.text(f"{asset_owner}: {asset} ({asset.hp}/{asset.max_hp()})")
+                    LayoutHelper.add_tooltip(text=asset.desc)
             if not loc_retain:
                 rm_loc = idx
         if rm_loc >= 0:
@@ -345,7 +533,7 @@ class WwnApp(App):
                 f"{faction.name}##{idx}", True, flags=imgui.TreeNodeFlags_.default_open
             )
             if faction_open and faction_retain:
-                faction.render(idx)
+                faction.render(idx, self.locations)
             if not faction_retain:
                 rm_faction = idx
             if idx < len(self.factions) - 1:

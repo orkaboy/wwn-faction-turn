@@ -34,16 +34,28 @@ class Asset:
     def init_from_prototype(self: Self, prototype: AssetPrototype) -> None:
         self.prototype = prototype
         if self.is_initialized():
-            self.hp = prototype.stats.max_hp
+            self.hp = self.max_hp()
             if prototype.stats.qualities:
                 self.qualities.extend(prototype.stats.qualities)
 
-    def name(self: Self) -> str:
+    def __repr__(self: Self) -> str:
         if self.is_initialized():
             return self.prototype.strings.name
         return "New Asset"
 
-    def render(self: Self, idx: str) -> None:
+    def max_hp(self: Self) -> int:
+        if self.is_initialized():
+            return self.prototype.stats.max_hp
+        return 0
+
+    def render_brief(self: Self) -> None:
+        """Render a hoverable brief."""
+        imgui.text(f"{self}")
+        LayoutHelper.add_tooltip(
+            f"{self.desc}\n\nLocation: {self.loc}\n\nHP{self.hp}/{self.max_hp()}"
+        )
+
+    def render(self: Self, idx: str, locations: list[Location]) -> None:
         """Render asset in GUI."""
         # Handle uninitialized assets
         if not self.is_initialized():
@@ -72,17 +84,23 @@ class Asset:
                 imgui.end_combo()
         else:
             _, self.desc = imgui.input_text_multiline(label=f"Description##{idx}", str=self.desc)
-            imgui.text("Location:")
-            imgui.same_line()
-            if self.loc:
-                imgui.text(self.loc)
-                LayoutHelper.add_tooltip(text=self.loc.desc)
-            else:
-                # TODO(orkaboy): combo button? need access to the locations
-                imgui.text("TODO")
+            if imgui.begin_combo(label=f"Location##{self.uuid}", preview_value=f"{self.loc}"):
+                for loc in locations:
+                    _, selected = imgui.selectable(
+                        label=f"{loc}##{loc.uuid}",
+                        p_selected=False,
+                    )
+                    LayoutHelper.add_tooltip(loc.desc)
+                    if selected:
+                        if self.loc:
+                            self.loc.assets.remove(self)
+                        self.loc = loc
+                        loc.assets.append(self)
+                imgui.end_combo()
+
             _, self.hp = imgui.input_int(label=f"HP##{idx}", v=self.hp)
             imgui.same_line()
-            imgui.text(f"/{self.prototype.stats.max_hp}")
+            imgui.text(f"/{self.max_hp()}")
             imgui.text_wrapped(f"Damage: {self.prototype.strings.damage_formula}")
             imgui.text_wrapped(f"Counter: {self.prototype.strings.counter_formula}")
             imgui.text_wrapped(self.prototype.strings.rules)
