@@ -341,7 +341,15 @@ If the damage done to an Asset reduces it to zero hit points, it is destroyed. T
 Damage done to a Base of Influence is also done directly to the faction's hit points. Overflow damage is not transmitted, however; if the Base of Influence only has 5 hit points and 7 hit points are inflicted, the faction loses the Base of Influence and 5 hit points from its total."""  # noqa: E501
                 )
 
-                # TODO(orkaboy): continue
+                imgui.text(f"{faction} can attack with the following assets:")
+                for asset in faction.assets:
+                    if asset.is_initialized() and asset.prototype.stats.atk_type:
+                        imgui.text(f"{asset} ({asset.loc})")
+                        LayoutHelper.add_tooltip(
+                            f"{asset.desc}\n\n{asset.prototype.strings.rules}\n\n{asset.prototype.strings.damage_formula}"
+                        )
+                        # TODO(orkaboy): Automate attack/damage/counter
+
                 if imgui.button("Done attacking##Turn"):
                     self.state = WwnApp.TurnFSM.CHECK_GOAL
 
@@ -352,7 +360,15 @@ Damage done to a Base of Influence is also done directly to the faction's hit po
 If an asset loses the Subtle or Stealth qualities while in a hostile location, they must use this action to retreat to safety within one turn or they will take half their maximum hit points in damage at the start of the next turn, rounded up."""  # noqa: E501
                 )
 
-                # TODO(orkaboy): continue
+                # TODO(orkaboy): Account for the losing Stealth/Subtle rule?
+
+                imgui.text(f"{faction} can move the following assets:")
+                for asset in faction.assets:
+                    if asset.is_initialized():
+                        imgui.text(f"{asset} ({asset.loc})")
+                        LayoutHelper.add_tooltip(f"{asset.desc}\n\n{asset.prototype.strings.rules}")
+
+                        # TODO(orkaboy): Dropdown list and move button for each asset?
                 if imgui.button("Done moving assets##Turn"):
                     self.state = WwnApp.TurnFSM.CHECK_GOAL
 
@@ -445,10 +461,12 @@ If the Base of Influence survives this onslaught, it operates as normal and allo
                     faction_assets: list[Asset] = []
                     for asset_cast in self.boi_loc.assets:
                         asset: Asset = asset_cast
-                        if asset.owner != faction.uuid and asset.is_initialized():
-                            rival_assets.append(asset)
-                        elif asset.is_initialized():
-                            faction_assets.append(asset)
+                        if asset.is_initialized():
+                            if asset.owner != faction.uuid:
+                                if asset.prototype.stats.atk_type:
+                                    rival_assets.append(asset)
+                            else:
+                                faction_assets.append(asset)
 
                     if len(rival_assets) > 0:
                         imgui.text(
