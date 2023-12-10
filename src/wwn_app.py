@@ -67,7 +67,7 @@ class WwnApp(App):
         self.open_project()
 
     def _turn_active(self: Self) -> bool:
-        # TODO(orkaboy): Currently doesn't allow save/load turning a turn
+        # TODO(orkaboy): Currently doesn't allow save/load durning a turn
         return self.turn_order is not None
 
     def execute(self: Self) -> None:
@@ -102,6 +102,7 @@ class WwnApp(App):
             self.state = WwnApp.TurnFSM.IDLE
             return
         faction = self.factions[self.cur_faction]
+
         # TODO(orkaboy): Logging
         match self.state:
             case WwnApp.TurnFSM.IDLE:
@@ -111,11 +112,13 @@ class WwnApp(App):
                 )
                 if imgui.button("Start first faction turn"):
                     self.state = WwnApp.TurnFSM.GAIN_TREASURE
+
             # Go to the next faction or end
             case WwnApp.TurnFSM.NEXT_FACTION:
                 self.cur_faction += 1
                 self.state = WwnApp.TurnFSM.GAIN_TREASURE
             # Main state machine
+
             case WwnApp.TurnFSM.GAIN_TREASURE:
                 imgui.text_wrapped(
                     "1. The faction earns Treasure equal to half their Wealth plus a quarter of their combined Force and Cunning, the total being rounded up."  # noqa: E501
@@ -125,6 +128,7 @@ class WwnApp(App):
                 if imgui.button("Apply treasure gain"):
                     faction.treasure += treasure_gain
                     self.state = WwnApp.TurnFSM.PAY_UPKEEP
+
             case WwnApp.TurnFSM.PAY_UPKEEP:
                 imgui.text_wrapped(
                     "2. The faction must pay any upkeep required by their individual Asset costs, or by the cost of having too many Assets for their attributes. If they can't afford this upkeep, individual Assets may have their own bad consequences, while not being able to afford excess Assets means that the excess are lost."  # noqa: E501
@@ -156,6 +160,7 @@ class WwnApp(App):
                 if imgui.button("Pay upkeep"):
                     faction.treasure = max(0, faction.treasure - total_upkeep)
                     self.state = WwnApp.TurnFSM.SPECIAL_ABILITIES
+
             case WwnApp.TurnFSM.SPECIAL_ABILITIES:
                 imgui.text_wrapped(
                     "3. The faction triggers any special abilities individual Assets may have, such as abilities that allow an Asset to move or perform some other special benefit."  # noqa: E501
@@ -173,6 +178,7 @@ class WwnApp(App):
                 LayoutHelper.add_spacer()
                 if imgui.button("Done with special actions"):
                     self.state = WwnApp.TurnFSM.MAIN_ACTION
+
             case WwnApp.TurnFSM.MAIN_ACTION:
                 imgui.text_wrapped(
                     "4. The faction takes one Faction Action as listed below, resolving any Attacks or other consequences from their choice. When an action is taken, every Asset owned by the faction may take it; thus, if Attack is chosen, then every valid Asset owned by the faction can Attack. If Repair Asset is chosen, every Asset can be repaired if enough Treasure is spent."  # noqa: E501
@@ -335,6 +341,7 @@ Damage done to a Base of Influence is also done directly to the faction's hit po
 
                 # TODO(orkaboy): continue
                 # TODO(orkaboy): Done
+
             case WwnApp.TurnFSM.ACTION_MOVE_ASSET:
                 imgui.text("MOVE ASSET:")
                 imgui.text_wrapped(
@@ -344,6 +351,7 @@ If an asset loses the Subtle or Stealth qualities while in a hostile location, t
 
                 # TODO(orkaboy): continue
                 # TODO(orkaboy): Done
+
             case WwnApp.TurnFSM.ACTION_REPAIR_ASSET:
                 imgui.text("REPAIR ASSET:")
                 imgui.text_wrapped(
@@ -403,6 +411,7 @@ If the Base of Influence survives this onslaught, it operates as normal and allo
                 )
                 # TODO(orkaboy): continue
                 # TODO(orkaboy): Done
+
             case WwnApp.TurnFSM.ACTION_CREATE_ASSET:
                 imgui.text("CREATE ASSET:")
                 imgui.text_wrapped(
@@ -492,16 +501,22 @@ A faction can have no more Assets of a particular attribute than their attribute
                     "An action available only to factions with a Cunning score of 3 or better, this action allows the faction to give one owned Asset the Stealth quality for every 2 Treasure they spend. Assets currently in a location with another faction's Base of Influence can't be hidden. If the Asset later loses the Stealth, no refund is given."  # noqa: E501
                 )
 
-                # TODO(orkaboy): Done
                 for asset in faction.assets:
-                    if not asset.is_initialized():
+                    if not asset.is_initialized() or asset.loc is None:
                         continue
 
                     if QUALITY.Stealth not in asset.qualities:
                         asset.render_brief()
                         imgui.same_line()
-                        # TODO(orkaboy): Disable if rival faction has Base of Influence in location
-                        disabled = faction.treasure < WwnApp.HIDE_ACTION_COST
+                        # Disable if rival faction has Base of Influence in location
+                        rival_at_loc = False
+                        for base_cast in asset.loc.bases:
+                            base: BaseOfInfluence = base_cast
+                            if base.owner != faction.uuid:
+                                rival_at_loc = True
+                                break
+
+                        disabled = faction.treasure < WwnApp.HIDE_ACTION_COST or rival_at_loc
                         if disabled:
                             imgui.begin_disabled()
                         if imgui.button(label=f"Add Stealth for 2 Treasure##{asset.uuid}"):
@@ -510,12 +525,14 @@ A faction can have no more Assets of a particular attribute than their attribute
                         if disabled:
                             LayoutHelper.add_tooltip("Cannot afford to add Stealth to asset.")
                             imgui.end_disabled()
+                if imgui.button("Done hiding##Turn"):
+                    self.state = WwnApp.TurnFSM.CHECK_GOAL
+
             case WwnApp.TurnFSM.ACTION_SELL_ASSET:
                 imgui.text("SELL ASSET:")
                 imgui.text_wrapped(
                     "The faction voluntarily decommissions an Asset, salvaging it for what it's worth. The Asset is lost and the faction gains half its purchase cost in Treasure, rounded down. If the Asset is damaged when it is sold, however, no Treasure is gained."  # noqa: E501
                 )
-                # TODO(orkaboy): Done
                 rm_asset = -1
                 for idx, asset in enumerate(faction.assets):
                     if not asset.is_initialized():
@@ -530,6 +547,8 @@ A faction can have no more Assets of a particular attribute than their attribute
                         rm_asset = idx
                 if rm_asset != -1:
                     faction.assets.pop(rm_asset)
+                if imgui.button("Done selling##Turn"):
+                    self.state = WwnApp.TurnFSM.CHECK_GOAL
             case _:
                 imgui.text("ERROR STATE")
 
