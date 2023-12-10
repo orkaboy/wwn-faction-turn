@@ -278,7 +278,41 @@ class WwnApp(App):
                 STYLE.pop_color()
 
                 LayoutHelper.add_spacer()
-                # TODO(orkaboy): Upgrade stats for exp
+                # Upgrade stats with exp
+                imgui.text(f"Faction experience points: {faction.exp}")
+                imgui.text(f"CUNNING: {faction.cunning}")
+                if faction.cunning < Faction.MAX_ATTRIBUTE:
+                    exp_cost = Faction.ATTRIBUTE_COST.get(faction.cunning + 1)
+                    disabled = faction.exp < exp_cost
+                    if disabled:
+                        imgui.begin_disabled()
+                    if imgui.button(label=f"Level up ({exp_cost})##Turn_buy_cunning"):
+                        faction.exp -= exp_cost
+                        faction.cunning += 1
+                    if disabled:
+                        imgui.end_disabled()
+                imgui.text(f"FORCE: {faction.force}")
+                if faction.force < Faction.MAX_ATTRIBUTE:
+                    exp_cost = Faction.ATTRIBUTE_COST.get(faction.force + 1)
+                    disabled = faction.exp < exp_cost
+                    if disabled:
+                        imgui.begin_disabled()
+                    if imgui.button(label=f"Level up ({exp_cost})##Turn_buy_force"):
+                        faction.exp -= exp_cost
+                        faction.force += 1
+                    if disabled:
+                        imgui.end_disabled()
+                imgui.text(f"WEALTH: {faction.wealth}")
+                if faction.wealth < Faction.MAX_ATTRIBUTE:
+                    exp_cost = Faction.ATTRIBUTE_COST.get(faction.wealth + 1)
+                    disabled = faction.exp < exp_cost
+                    if disabled:
+                        imgui.begin_disabled()
+                    if imgui.button(label=f"Level up ({exp_cost})##Turn_buy_wealth"):
+                        faction.exp -= exp_cost
+                        faction.wealth += 1
+                    if disabled:
+                        imgui.end_disabled()
                 LayoutHelper.add_spacer()
 
                 if imgui.button("COMPLETE TURN##Turn"):
