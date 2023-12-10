@@ -9,13 +9,13 @@ from imgui_bundle import imgui
 
 from config import open_yaml, write_yaml
 from src.app import App
-from src.asset import Asset, AssetType
+from src.asset import Asset, AssetPrototype, AssetType
 from src.base_of_influence import BaseOfInfluence
 from src.faction import Faction
 from src.layout_helper import LayoutHelper
 from src.location import Location
 from src.style import STYLE
-from src.system import QUALITY, goals_list
+from src.system import QUALITY, cunning_list, force_list, goals_list, wealth_list
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,8 @@ class WwnApp(App):
         self.turn_order: list[Faction] = None
         self.cur_faction: int = 0
         self.state: WwnApp.TurnFSM = WwnApp.TurnFSM.IDLE
+        self.asset_to_buy: AssetPrototype = None
+        self.asset_to_buy_loc: Location = None
         # Load project data from file
         config_project: dict = config_data.get("project", {})
         self.project_filename: str = config_project.get("filename", DEFAULT_PROJECT)
@@ -202,6 +204,8 @@ class WwnApp(App):
                 if imgui.button("Expand Influence"):
                     self.state = WwnApp.TurnFSM.ACTION_EXPAND_INFLUENCE
                 if imgui.button("Create Asset"):
+                    self.asset_to_buy = None
+                    self.asset_to_buy_loc = None
                     self.state = WwnApp.TurnFSM.ACTION_CREATE_ASSET
                 # Hide is an action available only to factions with a Cunning score of 3 or better
                 can_hide = faction.cunning >= WwnApp.HIDE_ACTION_CUNNING_REQUIREMENT
@@ -296,6 +300,7 @@ Damage done to a Base of Influence is also done directly to the faction's hit po
                 )
 
                 # TODO(orkaboy): continue
+                # TODO(orkaboy): Done
             case WwnApp.TurnFSM.ACTION_MOVE_ASSET:
                 imgui.text("MOVE ASSET:")
                 imgui.text_wrapped(
@@ -304,6 +309,7 @@ If an asset loses the Subtle or Stealth qualities while in a hostile location, t
                 )
 
                 # TODO(orkaboy): continue
+                # TODO(orkaboy): Done
             case WwnApp.TurnFSM.ACTION_REPAIR_ASSET:
                 imgui.text("REPAIR ASSET:")
                 imgui.text_wrapped(
@@ -352,6 +358,7 @@ This ability can at the same time also be used to repair damage done to the fact
                 )
                 if disabled:
                     imgui.end_disabled()
+                # TODO(orkaboy): Done
 
             case WwnApp.TurnFSM.ACTION_EXPAND_INFLUENCE:
                 imgui.text("EXPAND INFLUENCE:")
@@ -361,19 +368,97 @@ Once the Base of Influence is created, the owner makes a Cunning versus Cunning 
 If the Base of Influence survives this onslaught, it operates as normal and allows the faction to purchase new Assets there with the Create Asset action."""  # noqa: E501
                 )
                 # TODO(orkaboy): continue
+                # TODO(orkaboy): Done
             case WwnApp.TurnFSM.ACTION_CREATE_ASSET:
                 imgui.text("CREATE ASSET:")
                 imgui.text_wrapped(
                     """The faction buys one Asset at a location where they have a Base of Influence. They must have the minimum attribute and Magic ratings necessary to buy the Asset and must pay the listed cost in Treasure to build it. A faction can create only one Asset per turn.
 A faction can have no more Assets of a particular attribute than their attribute score. Thus, a faction with a Force of 3 can have only 3 Force Assets. If this number is exceeded, the faction must pay 1 Treasure per excess Asset at the start of each turn, or else they will lose the excess."""  # noqa: E501
                 )
-                # TODO(orkaboy): continue
+                if imgui.begin_combo(label="Set Goal##Turn", preview_value=f"{self.asset_to_buy}"):
+                    imgui.text("=== CUNNING ===")
+                    for asset in cunning_list():
+                        if faction.magic < asset.requirements.magic_level:
+                            continue
+                        if faction.cunning < asset.requirements.tier:
+                            continue
+                        _, selected = imgui.selectable(
+                            label=f"{asset.strings.name}##Turn_buy",
+                            p_selected=False,
+                        )
+                        LayoutHelper.add_tooltip(asset.strings.rules)
+                        if selected:
+                            self.asset_to_buy = asset
+                    imgui.text("=== FORCE ===")
+                    for asset in force_list():
+                        if faction.magic < asset.requirements.magic_level:
+                            continue
+                        if faction.force < asset.requirements.tier:
+                            continue
+                        _, selected = imgui.selectable(
+                            label=f"{asset.strings.name}##Turn_buy",
+                            p_selected=False,
+                        )
+                        LayoutHelper.add_tooltip(asset.strings.rules)
+                        if selected:
+                            self.asset_to_buy = asset
+                    imgui.text("=== WEALTH ===")
+                    for asset in wealth_list():
+                        if faction.magic < asset.requirements.magic_level:
+                            continue
+                        if faction.wealth < asset.requirements.tier:
+                            continue
+                        _, selected = imgui.selectable(
+                            label=f"{asset.strings.name}##Turn_buy",
+                            p_selected=False,
+                        )
+                        LayoutHelper.add_tooltip(asset.strings.rules)
+                        if selected:
+                            self.asset_to_buy = asset
+                    imgui.end_combo()
+
+                if imgui.begin_combo(
+                    label="Set Location##Turn", preview_value=f"{self.asset_to_buy_loc}"
+                ):
+                    for base in faction.bases:
+                        _, selected = imgui.selectable(
+                            label=f"{base.location}##Turn_buy_loc",
+                            p_selected=False,
+                        )
+                        LayoutHelper.add_tooltip(base.desc)
+                        if selected:
+                            self.asset_to_buy_loc = base.location
+                    imgui.end_combo()
+                LayoutHelper.add_spacer()
+                if self.asset_to_buy and self.asset_to_buy_loc:
+                    cost = self.asset_to_buy.requirements.cost
+                    imgui.text(
+                        f"Selected asset of type '{self.asset_to_buy}' at location '{self.asset_to_buy_loc}' for {cost} Treasure."  # noqa: E501
+                    )
+                    can_buy = faction.treasure >= cost
+                    if not can_buy:
+                        imgui.begin_disabled()
+                    if imgui.button(label="Buy Asset##Turn"):
+                        faction.treasure -= cost
+                        new_asset = Asset(
+                            prototype=self.asset_to_buy,
+                            owner=faction.uuid,
+                            uuid=uuid4().hex,
+                            loc=self.asset_to_buy_loc,
+                        )
+                        faction.assets.append(new_asset)
+                        self.asset_to_buy_loc.assets.append(new_asset)
+                        self.state = WwnApp.TurnFSM.CHECK_GOAL
+                    if not can_buy:
+                        imgui.end_disabled()
+
             case WwnApp.TurnFSM.ACTION_HIDE_ASSET:
                 imgui.text("HIDE ASSET:")
                 imgui.text_wrapped(
                     "An action available only to factions with a Cunning score of 3 or better, this action allows the faction to give one owned Asset the Stealth quality for every 2 Treasure they spend. Assets currently in a location with another faction's Base of Influence can't be hidden. If the Asset later loses the Stealth, no refund is given."  # noqa: E501
                 )
 
+                # TODO(orkaboy): Done
                 for asset in faction.assets:
                     if not asset.is_initialized():
                         continue
@@ -396,7 +481,7 @@ A faction can have no more Assets of a particular attribute than their attribute
                 imgui.text_wrapped(
                     "The faction voluntarily decommissions an Asset, salvaging it for what it's worth. The Asset is lost and the faction gains half its purchase cost in Treasure, rounded down. If the Asset is damaged when it is sold, however, no Treasure is gained."  # noqa: E501
                 )
-
+                # TODO(orkaboy): Done
                 rm_asset = -1
                 for idx, asset in enumerate(faction.assets):
                     if not asset.is_initialized():

@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from functools import total_ordering
 from typing import Self
 
 from src.quality import Quality
@@ -12,6 +13,7 @@ class AssetType(Enum):
     WEALTH = auto()
 
 
+@total_ordering
 class MagicLevel(Enum):
     """MagicLevel enumeration."""
 
@@ -19,6 +21,9 @@ class MagicLevel(Enum):
     LOW = 1
     MEDIUM = 2
     HIGH = 3
+
+    def __lt__(self: Self, other: Self) -> bool:
+        return self.value < other.value
 
 
 class AssetRequirement:
@@ -97,3 +102,6 @@ class AssetPrototype:
     def upkeep(self: Self) -> int:
         """Calculate upkeep for a given asset."""
         return self.stats.upkeep
+
+    def __repr__(self: Self) -> str:
+        return self.strings.name
