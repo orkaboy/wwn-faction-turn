@@ -61,6 +61,8 @@ class WwnApp(App):
         self.state: WwnApp.TurnFSM = WwnApp.TurnFSM.IDLE
         self.asset_to_buy: AssetPrototype = None
         self.asset_to_buy_loc: Location = None
+        self.boi_loc: Location = None
+        self.boi_hp: int = 0
         # Load project data from file
         config_project: dict = config_data.get("project", {})
         self.project_filename: str = config_project.get("filename", DEFAULT_PROJECT)
@@ -340,7 +342,8 @@ Damage done to a Base of Influence is also done directly to the faction's hit po
                 )
 
                 # TODO(orkaboy): continue
-                # TODO(orkaboy): Done
+                if imgui.button("Done attacking##Turn"):
+                    self.state = WwnApp.TurnFSM.CHECK_GOAL
 
             case WwnApp.TurnFSM.ACTION_MOVE_ASSET:
                 imgui.text("MOVE ASSET:")
@@ -350,7 +353,8 @@ If an asset loses the Subtle or Stealth qualities while in a hostile location, t
                 )
 
                 # TODO(orkaboy): continue
-                # TODO(orkaboy): Done
+                if imgui.button("Done moving assets##Turn"):
+                    self.state = WwnApp.TurnFSM.CHECK_GOAL
 
             case WwnApp.TurnFSM.ACTION_REPAIR_ASSET:
                 imgui.text("REPAIR ASSET:")
@@ -400,7 +404,9 @@ This ability can at the same time also be used to repair damage done to the fact
                 )
                 if disabled:
                     imgui.end_disabled()
-                # TODO(orkaboy): Done
+
+                if imgui.button("Done repairing##Turn"):
+                    self.state = WwnApp.TurnFSM.CHECK_GOAL
 
             case WwnApp.TurnFSM.ACTION_EXPAND_INFLUENCE:
                 imgui.text("EXPAND INFLUENCE:")
@@ -409,8 +415,83 @@ This ability can at the same time also be used to repair damage done to the fact
 Once the Base of Influence is created, the owner makes a Cunning versus Cunning attribute check against every other faction that has at least one Asset in the same location. If the other faction wins the check, they are allowed to make an immediate Attack against the new Base of Influence with whatever Assets they have present in the location. The creating faction may attempt to block this action by defending with other Assets present.
 If the Base of Influence survives this onslaught, it operates as normal and allows the faction to purchase new Assets there with the Create Asset action."""  # noqa: E501
                 )
-                # TODO(orkaboy): continue
-                # TODO(orkaboy): Done
+
+                locs: set[Location] = {}
+                for asset in faction.assets:
+                    if asset.loc:
+                        locs.add(asset.loc)
+
+                if imgui.begin_combo(label="Base Location##Turn", preview_value=f"{self.boi_loc}"):
+                    for loc in locs:
+                        _, selected = imgui.selectable(
+                            label=f"{loc}##Turn_boi",
+                            p_selected=False,
+                        )
+                        LayoutHelper.add_tooltip(loc.desc)
+                        if selected:
+                            self.boi_loc = loc
+                    imgui.end_combo()
+                _, self.boi_hp = imgui.input_int(label="HP##Turn_buy_boi", v=self.boi_hp)
+
+                LayoutHelper.add_spacer()
+
+                if self.boi_loc:
+                    imgui.text(
+                        f"Build a new base of influence at '{self.boi_loc}' with '{self.boi_hp}' HP (costing {self.boi_hp} Treasure)"  # noqa: E501
+                    )
+
+                    # rival_factions: list[str] = []
+                    rival_assets: list[Asset] = []
+                    faction_assets: list[Asset] = []
+                    for asset_cast in self.boi_loc.assets:
+                        asset: Asset = asset_cast
+                        if asset.owner != faction.uuid and asset.is_initialized():
+                            rival_assets.append(asset)
+                        elif asset.is_initialized():
+                            faction_assets.append(asset)
+
+                    if len(rival_assets) > 0:
+                        imgui.text(
+                            "The following assets will be able to make a free Attack against the new base if the owning faction succeeds at a Cunning v. Cunning roll:"  # noqa: E501
+                        )
+                        for asset in rival_assets:
+                            owner: Faction = None
+                            for faction in self.factions:
+                                if faction.uuid == asset.owner:
+                                    owner = faction
+                                    break
+                            imgui.text(f"{asset} ({owner})")
+                            LayoutHelper.add_tooltip(
+                                f"{asset.desc}\n\nDamage formula: {asset.prototype.strings.damage_formula}"  # noqa: E501
+                            )
+                        imgui.text(
+                            "The faction building the new base may defend with any assets present:"
+                        )
+                        for asset in faction_assets:
+                            imgui.text(f"{asset}, HP {asset.hp}/{asset.max_hp()}")
+                            LayoutHelper.add_tooltip(f"{asset.desc}")
+
+                    disabled = faction.treasure < self.boi_hp
+                    if disabled:
+                        imgui.begin_disabled()
+                    if imgui.button("Build##Turn_buy_boi"):
+                        faction.treasure -= self.boi_hp
+                        base = BaseOfInfluence(
+                            uuid=uuid4().hex,
+                            owner=faction.uuid,
+                            location=self.boi_loc,
+                            max_hp=self.boi_hp,
+                        )
+                        faction.bases.append(base)
+                        self.boi_loc.bases.append(base)
+                        # TODO(orkaboy): Cunning v Cunning, Attacks, Defend
+                    if disabled:
+                        imgui.end_disabled()
+
+                LayoutHelper.add_spacer()
+
+                if imgui.button("Done building bases##Turn"):
+                    self.state = WwnApp.TurnFSM.CHECK_GOAL
 
             case WwnApp.TurnFSM.ACTION_CREATE_ASSET:
                 imgui.text("CREATE ASSET:")
@@ -420,44 +501,44 @@ A faction can have no more Assets of a particular attribute than their attribute
                 )
                 if imgui.begin_combo(label="Set Goal##Turn", preview_value=f"{self.asset_to_buy}"):
                     imgui.text("=== CUNNING ===")
-                    for asset in cunning_list():
-                        if faction.magic < asset.requirements.magic_level:
+                    for prototype in cunning_list():
+                        if faction.magic < prototype.requirements.magic_level:
                             continue
-                        if faction.cunning < asset.requirements.tier:
+                        if faction.cunning < prototype.requirements.tier:
                             continue
                         _, selected = imgui.selectable(
-                            label=f"{asset.strings.name}##Turn_buy",
+                            label=f"{prototype.strings.name}##Turn_buy",
                             p_selected=False,
                         )
-                        LayoutHelper.add_tooltip(asset.strings.rules)
+                        LayoutHelper.add_tooltip(prototype.strings.rules)
                         if selected:
-                            self.asset_to_buy = asset
+                            self.asset_to_buy = prototype
                     imgui.text("=== FORCE ===")
-                    for asset in force_list():
-                        if faction.magic < asset.requirements.magic_level:
+                    for prototype in force_list():
+                        if faction.magic < prototype.requirements.magic_level:
                             continue
-                        if faction.force < asset.requirements.tier:
+                        if faction.force < prototype.requirements.tier:
                             continue
                         _, selected = imgui.selectable(
-                            label=f"{asset.strings.name}##Turn_buy",
+                            label=f"{prototype.strings.name}##Turn_buy",
                             p_selected=False,
                         )
-                        LayoutHelper.add_tooltip(asset.strings.rules)
+                        LayoutHelper.add_tooltip(prototype.strings.rules)
                         if selected:
-                            self.asset_to_buy = asset
+                            self.asset_to_buy = prototype
                     imgui.text("=== WEALTH ===")
-                    for asset in wealth_list():
-                        if faction.magic < asset.requirements.magic_level:
+                    for prototype in wealth_list():
+                        if faction.magic < prototype.requirements.magic_level:
                             continue
-                        if faction.wealth < asset.requirements.tier:
+                        if faction.wealth < prototype.requirements.tier:
                             continue
                         _, selected = imgui.selectable(
-                            label=f"{asset.strings.name}##Turn_buy",
+                            label=f"{prototype.strings.name}##Turn_buy",
                             p_selected=False,
                         )
-                        LayoutHelper.add_tooltip(asset.strings.rules)
+                        LayoutHelper.add_tooltip(prototype.strings.rules)
                         if selected:
-                            self.asset_to_buy = asset
+                            self.asset_to_buy = prototype
                     imgui.end_combo()
 
                 if imgui.begin_combo(
