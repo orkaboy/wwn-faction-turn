@@ -77,6 +77,7 @@ class WwnApp(App):
         self.faction_window()
         self.location_window()
         self.turn_window()
+        self.project_window()
 
     def open_project(self: Self) -> None:
         """Load project from file."""
@@ -685,22 +686,31 @@ A faction can have no more Assets of a particular attribute than their attribute
                 self.turn_order = None
                 self.state = WwnApp.TurnFSM.IDLE
             STYLE.pop_color()
-        else:
-            if imgui.button("New Turn"):
-                for faction in self.factions:
-                    faction.roll_initiative()
-                self.turn_order = sorted(
-                    self.factions.copy(), key=lambda faction: faction.initiative, reverse=True
-                )
-                self.state = WwnApp.TurnFSM.IDLE
-                self.turn += 1
-            # Save project to file
-            _, self.project_filename = imgui.input_text(label="Filename", str=self.project_filename)
-            if imgui.button("Save project"):
-                self.save_project()
-            imgui.same_line()
-            if imgui.button("Load project"):
-                self.open_project()
+        elif imgui.button("New Turn"):
+            for faction in self.factions:
+                faction.roll_initiative()
+            self.turn_order = sorted(
+                self.factions.copy(), key=lambda faction: faction.initiative, reverse=True
+            )
+            self.state = WwnApp.TurnFSM.IDLE
+            self.turn += 1
+
+        imgui.end()
+
+    def project_window(self: Self) -> None:
+        """Draw project GUI."""
+        imgui.begin("Project")
+
+        imgui.set_window_pos("Project", imgui.ImVec2(500, 5), imgui.Cond_.first_use_ever)
+        imgui.set_window_size(imgui.ImVec2(240, 410), cond=imgui.Cond_.first_use_ever)
+
+        # Save project to file
+        _, self.project_filename = imgui.input_text(label="Filename", str=self.project_filename)
+        if imgui.button("Save project"):
+            self.save_project()
+        imgui.same_line()
+        if imgui.button("Load project"):
+            self.open_project()
 
         imgui.end()
 
