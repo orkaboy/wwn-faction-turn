@@ -38,7 +38,7 @@ class WwnApp(App):
         """Draw GUI windows."""
         self.faction_window()
         self.location_window()
-        self.turn.execute(self.factions)
+        self.turn.execute(self.factions, self.locations)
         self.project_window()
 
     def open_project(self: Self) -> None:
@@ -117,13 +117,15 @@ class WwnApp(App):
                             asset_owner = faction
                             break
                     imgui.text(f"{asset_owner}: {asset} ({asset.hp}/{asset.max_hp()})")
+                    LayoutHelper.add_tooltip(text=asset.desc)
                     if QUALITY.Stealth in asset.qualities:
                         imgui.same_line()
                         imgui.text("STEALTH")
+                        LayoutHelper.add_tooltip(text=QUALITY.Stealth.rules)
                     if QUALITY.Subtle in asset.qualities:
                         imgui.same_line()
                         imgui.text("SUBTLE")
-                    LayoutHelper.add_tooltip(text=asset.desc)
+                        LayoutHelper.add_tooltip(text=QUALITY.Subtle.rules)
             if not loc_retain:
                 rm_loc = idx
         if rm_loc >= 0:

@@ -29,6 +29,7 @@ class Asset:
         self.init_from_prototype(prototype)
         # Temporary stats
         self.repair_cost = 1
+        self.move_target: Location = None
 
     def is_initialized(self: Self) -> bool:
         return isinstance(self.prototype, AssetPrototype)

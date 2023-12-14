@@ -76,8 +76,9 @@ class FactionTurn:
             faction = self.turn_order[self.cur_faction]
             for asset in faction.assets:
                 asset.repair_cost = 1
+                asset.move_target = None
 
-    def turn_logic(self: Self) -> None:
+    def turn_logic(self: Self, locations: list[Location]) -> None:
         """Execute turn logic according to the TurnFSM."""
         if self.cur_faction >= len(self.turn_order):
             self.turn_order = None
@@ -228,7 +229,7 @@ class FactionTurn:
                 | FactionTurn.TurnFSM.ACTION_HIDE_ASSET
                 | FactionTurn.TurnFSM.ACTION_SELL_ASSET
             ):
-                self.main_action()
+                self.main_action(locations)
 
                 LayoutHelper.add_spacer()
 
@@ -315,7 +316,7 @@ class FactionTurn:
             if disabled:
                 imgui.end_disabled()
 
-    def main_action(self: Self) -> None:
+    def main_action(self: Self, locations: list[Location]) -> None:
         """Display main action part of statemachine."""
         faction = self.turn_order[self.cur_faction]
 
@@ -356,10 +357,31 @@ If an asset loses the Subtle or Stealth qualities while in a hostile location, t
                     if asset.is_initialized():
                         imgui.text(f"{asset} ({asset.loc})")
                         LayoutHelper.add_tooltip(f"{asset.desc}\n\n{asset.prototype.strings.rules}")
+                        imgui.same_line()
+                        # Dropdown list and move button for each asset
+                        if imgui.begin_combo(
+                            label=f"Target Location##Turn_{asset.uuid}",
+                            preview_value=f"{asset.move_target}",
+                        ):
+                            for loc in locations:
+                                _, selected = imgui.selectable(
+                                    label=f"{loc}##Turn_{loc.uuid}",
+                                    p_selected=False,
+                                )
+                                LayoutHelper.add_tooltip(loc.desc)
+                                if selected:
+                                    asset.move_target = loc
+                            imgui.end_combo()
 
-                        # TODO(orkaboy): Dropdown list and move button for each asset?
-                if imgui.button("Done moving assets##Turn"):
+                if imgui.button("Confirm move##Turn"):
                     self.state = FactionTurn.TurnFSM.POST_ACTION
+                    for asset in faction.assets:
+                        if asset.is_initialized() and asset.move_target:
+                            if asset.loc:
+                                asset.loc.assets.remove(asset)
+                            asset.loc = asset.move_target
+                            asset.move_target.assets.append(asset)
+                            asset.move_target = None
 
             case FactionTurn.TurnFSM.ACTION_REPAIR_ASSET:
                 imgui.text("REPAIR ASSET:")
@@ -640,7 +662,7 @@ A faction can have no more Assets of a particular attribute than their attribute
             if selected:
                 self.asset_to_buy = prototype
 
-    def execute(self: Self, factions: list[Faction]) -> None:
+    def execute(self: Self, factions: list[Faction], locations: list[Location]) -> None:
         """Draw turn logic GUI."""
         imgui.begin("Turn")
 
@@ -659,7 +681,7 @@ A faction can have no more Assets of a particular attribute than their attribute
 
             # Execute main turn logic
             LayoutHelper.add_spacer()
-            self.turn_logic()
+            self.turn_logic(locations)
             LayoutHelper.add_spacer()
             _, faction.notes = imgui.input_text_multiline(
                 label=f"Faction Notes##Turn_{faction.uuid}", str=faction.notes
