@@ -744,6 +744,12 @@ A faction can have no more Assets of a particular attribute than their attribute
                             asset_owner = faction
                             break
                     imgui.text(f"{asset_owner}: {asset} ({asset.hp}/{asset.max_hp()})")
+                    if QUALITY.Stealth in asset.qualities:
+                        imgui.same_line()
+                        imgui.text("STEALTH")
+                    if QUALITY.Subtle in asset.qualities:
+                        imgui.same_line()
+                        imgui.text("SUBTLE")
                     LayoutHelper.add_tooltip(text=asset.desc)
             if not loc_retain:
                 rm_loc = idx
