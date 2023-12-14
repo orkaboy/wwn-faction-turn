@@ -46,24 +46,37 @@ class FactionTurn:
 
     def __init__(self: Self) -> None:
         """Initialize FactionTurn object."""
-        self.turn: int = 0
-        # Turn
+        # Turn counter
+        self.turn_idx: int = 0
+        # Turn variables
         self.turn_order: list[Faction] = None
         self.cur_faction: int = 0
         self.state: FactionTurn.TurnFSM = FactionTurn.TurnFSM.IDLE
+        # Temp choice variables
         self.asset_to_buy: AssetPrototype = None
         self.asset_to_buy_loc: Location = None
         self.boi_loc: Location = None
         self.boi_hp: int = 0
+        self.repaired_faction: bool = False
 
     def _turn_active(self: Self) -> bool:
         return self.turn_order is not None
+
+    def _new_turn(self: Self) -> None:
+        """Clear temp variables and enter first FSM state."""
+        self.state = FactionTurn.TurnFSM.GAIN_TREASURE
+        self.repaired_faction = False
+        self.asset_to_buy = None
+        self.asset_to_buy_loc = None
+        self.boi_loc = None
+        self.boi_hp = 0
 
     def turn_logic(self: Self, factions: list[Faction]) -> None:
         """Execute turn logic according to the TurnFSM."""
         if self.cur_faction >= len(factions):
             self.turn_order = None
             self.state = FactionTurn.TurnFSM.IDLE
+            self.cur_faction = 0
             return
         faction = factions[self.cur_faction]
 
@@ -75,12 +88,12 @@ class FactionTurn:
                     "At the start of every faction turn, each faction rolls 1d8 for initiative, the highest rolls going first. Ties are resolved as the GM wishes, and then each faction takes the steps in order."  # noqa: E501
                 )
                 if imgui.button("Start first faction turn"):
-                    self.state = FactionTurn.TurnFSM.GAIN_TREASURE
+                    self._new_turn()
 
             # Go to the next faction or end
             case FactionTurn.TurnFSM.NEXT_FACTION:
                 self.cur_faction += 1
-                self.state = FactionTurn.TurnFSM.GAIN_TREASURE
+                self._new_turn()
             # Main state machine
 
             case FactionTurn.TurnFSM.GAIN_TREASURE:
@@ -174,8 +187,6 @@ class FactionTurn:
                 if imgui.button("Expand Influence"):
                     self.state = FactionTurn.TurnFSM.ACTION_EXPAND_INFLUENCE
                 if imgui.button("Create Asset"):
-                    self.asset_to_buy = None
-                    self.asset_to_buy_loc = None
                     self.state = FactionTurn.TurnFSM.ACTION_CREATE_ASSET
                 # Hide is an action available only to factions with a Cunning score of 3 or better
                 can_hide = faction.cunning >= FactionTurn.HIDE_ACTION_CUNNING_REQUIREMENT
@@ -372,11 +383,15 @@ This ability can at the same time also be used to repair damage done to the fact
                 repair_cost = 1
                 # TODO(orkaboy): Only available once per turn
                 disabled = faction.treasure < repair_cost
+                if self.repaired_faction:
+                    imgui.text("(Repairing faction is only available once per turn)")
+                    disabled = True
                 if disabled:
                     imgui.begin_disabled()
                 if imgui.button("Repair faction"):
                     faction.treasure -= repair_cost
                     faction.hp = min(faction.max_hp(), faction.hp + repair_amount)
+                    self.repaired_faction = True
                 LayoutHelper.add_tooltip(
                     f"Repair faction for up to {repair_amount} HP, for {repair_cost} Treasure"
                 )
@@ -589,6 +604,7 @@ A faction can have no more Assets of a particular attribute than their attribute
     def _create_asset_combo_prototypes(
         self: Self, proto_list: list[AssetPrototype], magic: MagicLevel, tier: int
     ) -> None:
+        """Fill combo box with assets you are able to buy."""
         for prototype in proto_list:
             if magic < prototype.requirements.magic_level:
                 continue
@@ -609,7 +625,7 @@ A faction can have no more Assets of a particular attribute than their attribute
         imgui.set_window_pos("Turn", imgui.ImVec2(245, 5), imgui.Cond_.first_use_ever)
         imgui.set_window_size(imgui.ImVec2(240, 410), cond=imgui.Cond_.first_use_ever)
 
-        imgui.text(f"Turn {self.turn}")
+        imgui.text(f"Turn {self.turn_idx}")
         if self._turn_active():
             # Print out the turn order and progress
             imgui.text("TURN ORDER:")
@@ -643,6 +659,6 @@ A faction can have no more Assets of a particular attribute than their attribute
                 factions.copy(), key=lambda faction: faction.initiative, reverse=True
             )
             self.state = FactionTurn.TurnFSM.IDLE
-            self.turn += 1
+            self.turn_idx += 1
 
         imgui.end()
