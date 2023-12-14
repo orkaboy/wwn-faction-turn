@@ -61,6 +61,8 @@ class Faction:
         self.bases: list[BaseOfInfluence] = []
         # Tags tracking
         self.tags: list[Tag] = []
+        # Temporary variables
+        self.goal_change_paralysis = False
 
     def __repr__(self: Self) -> str:
         return self.name

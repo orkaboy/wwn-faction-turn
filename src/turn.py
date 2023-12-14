@@ -42,6 +42,7 @@ class FactionTurn:
         ACTION_HIDE_ASSET = auto()
         ACTION_SELL_ASSET = auto()
         # </Actions>
+        POST_ACTION = auto()
         CHECK_GOAL = auto()
 
     def __init__(self: Self) -> None:
@@ -71,14 +72,14 @@ class FactionTurn:
         self.boi_loc = None
         self.boi_hp = 0
 
-    def turn_logic(self: Self, factions: list[Faction]) -> None:
+    def turn_logic(self: Self) -> None:
         """Execute turn logic according to the TurnFSM."""
-        if self.cur_faction >= len(factions):
+        if self.cur_faction >= len(self.turn_order):
             self.turn_order = None
             self.state = FactionTurn.TurnFSM.IDLE
             self.cur_faction = 0
             return
-        faction = factions[self.cur_faction]
+        faction = self.turn_order[self.cur_faction]
 
         # TODO(orkaboy): Logging
         match self.state:
@@ -161,6 +162,11 @@ class FactionTurn:
                     "4. The faction takes one Faction Action as listed below, resolving any Attacks or other consequences from their choice. When an action is taken, every Asset owned by the faction may take it; thus, if Attack is chosen, then every valid Asset owned by the faction can Attack. If Repair Asset is chosen, every Asset can be repaired if enough Treasure is spent."  # noqa: E501
                 )
 
+                if faction.goal_change_paralysis:
+                    imgui.text(
+                        "NOTE: Faction marked as paralyzed since it changed its goal last turn! Unless the Faction can for some reason ignore this condition, skip main action for this turn."  # noqa: E501
+                    )
+
                 no_assets = len(faction.assets) == 0
 
                 # Only allow Attack, Move Asset, Repair Asset if the faction has assets
@@ -208,7 +214,7 @@ class FactionTurn:
                     imgui.end_disabled()
 
                 if imgui.button("Skip Main Action"):
-                    self.state = FactionTurn.TurnFSM.CHECK_GOAL
+                    self.state = FactionTurn.TurnFSM.POST_ACTION
                 LayoutHelper.add_tooltip("Skip the faction's main action this turn.")
 
             case (
@@ -220,14 +226,18 @@ class FactionTurn:
                 | FactionTurn.TurnFSM.ACTION_HIDE_ASSET
                 | FactionTurn.TurnFSM.ACTION_SELL_ASSET
             ):
-                self.main_action(factions)
+                self.main_action()
 
                 LayoutHelper.add_spacer()
 
                 if imgui.button(label="Back##Action"):
                     self.state = FactionTurn.TurnFSM.MAIN_ACTION
                 if imgui.button(label="Done##Action"):
-                    self.state = FactionTurn.TurnFSM.CHECK_GOAL
+                    self.state = FactionTurn.TurnFSM.POST_ACTION
+
+            case FactionTurn.TurnFSM.POST_ACTION:
+                faction.goal_change_paralysis = False
+                self.state = FactionTurn.TurnFSM.CHECK_GOAL
 
             case FactionTurn.TurnFSM.CHECK_GOAL:
                 imgui.text_wrapped(
@@ -254,54 +264,58 @@ class FactionTurn:
                     imgui.end_combo()
                 STYLE.button_color(STYLE.COL_RED)
                 if faction.goal and imgui.button("Abort goal"):
-                    # TODO(orkaboy): Mark as paralyzed next turn
+                    # Mark as paralyzed next turn
+                    faction.goal_change_paralysis = True
                     faction.goal = None
                 STYLE.pop_color()
 
                 LayoutHelper.add_spacer()
-                # Upgrade stats with exp
-                imgui.text(f"Faction experience points: {faction.exp}")
-                imgui.text(f"CUNNING: {faction.cunning}")
-                if faction.cunning < Faction.MAX_ATTRIBUTE:
-                    exp_cost = Faction.ATTRIBUTE_COST.get(faction.cunning + 1)
-                    disabled = faction.exp < exp_cost
-                    if disabled:
-                        imgui.begin_disabled()
-                    if imgui.button(label=f"Level up ({exp_cost})##Turn_buy_cunning"):
-                        faction.exp -= exp_cost
-                        faction.cunning += 1
-                    if disabled:
-                        imgui.end_disabled()
-                imgui.text(f"FORCE: {faction.force}")
-                if faction.force < Faction.MAX_ATTRIBUTE:
-                    exp_cost = Faction.ATTRIBUTE_COST.get(faction.force + 1)
-                    disabled = faction.exp < exp_cost
-                    if disabled:
-                        imgui.begin_disabled()
-                    if imgui.button(label=f"Level up ({exp_cost})##Turn_buy_force"):
-                        faction.exp -= exp_cost
-                        faction.force += 1
-                    if disabled:
-                        imgui.end_disabled()
-                imgui.text(f"WEALTH: {faction.wealth}")
-                if faction.wealth < Faction.MAX_ATTRIBUTE:
-                    exp_cost = Faction.ATTRIBUTE_COST.get(faction.wealth + 1)
-                    disabled = faction.exp < exp_cost
-                    if disabled:
-                        imgui.begin_disabled()
-                    if imgui.button(label=f"Level up ({exp_cost})##Turn_buy_wealth"):
-                        faction.exp -= exp_cost
-                        faction.wealth += 1
-                    if disabled:
-                        imgui.end_disabled()
+                self._level_up_section(faction=faction)
                 LayoutHelper.add_spacer()
 
                 if imgui.button("COMPLETE TURN##Turn"):
                     self.state = FactionTurn.TurnFSM.NEXT_FACTION
 
-    def main_action(self: Self, factions: list[Faction]) -> None:
+    def _level_up_section(self: Self, faction: Faction) -> None:
+        """Upgrade stats with exp."""
+        imgui.text(f"Faction experience points: {faction.exp}")
+        imgui.text(f"CUNNING: {faction.cunning}")
+        if faction.cunning < Faction.MAX_ATTRIBUTE:
+            exp_cost = Faction.ATTRIBUTE_COST.get(faction.cunning + 1)
+            disabled = faction.exp < exp_cost
+            if disabled:
+                imgui.begin_disabled()
+            if imgui.button(label=f"Level up ({exp_cost})##Turn_buy_cunning"):
+                faction.exp -= exp_cost
+                faction.cunning += 1
+            if disabled:
+                imgui.end_disabled()
+        imgui.text(f"FORCE: {faction.force}")
+        if faction.force < Faction.MAX_ATTRIBUTE:
+            exp_cost = Faction.ATTRIBUTE_COST.get(faction.force + 1)
+            disabled = faction.exp < exp_cost
+            if disabled:
+                imgui.begin_disabled()
+            if imgui.button(label=f"Level up ({exp_cost})##Turn_buy_force"):
+                faction.exp -= exp_cost
+                faction.force += 1
+            if disabled:
+                imgui.end_disabled()
+        imgui.text(f"WEALTH: {faction.wealth}")
+        if faction.wealth < Faction.MAX_ATTRIBUTE:
+            exp_cost = Faction.ATTRIBUTE_COST.get(faction.wealth + 1)
+            disabled = faction.exp < exp_cost
+            if disabled:
+                imgui.begin_disabled()
+            if imgui.button(label=f"Level up ({exp_cost})##Turn_buy_wealth"):
+                faction.exp -= exp_cost
+                faction.wealth += 1
+            if disabled:
+                imgui.end_disabled()
+
+    def main_action(self: Self) -> None:
         """Display main action part of statemachine."""
-        faction = factions[self.cur_faction]
+        faction = self.turn_order[self.cur_faction]
 
         # TODO(orkaboy): continue
         match self.state:
@@ -324,7 +338,7 @@ Damage done to a Base of Influence is also done directly to the faction's hit po
                         # TODO(orkaboy): Automate attack/damage/counter
 
                 if imgui.button("Done attacking##Turn"):
-                    self.state = FactionTurn.TurnFSM.CHECK_GOAL
+                    self.state = FactionTurn.TurnFSM.POST_ACTION
 
             case FactionTurn.TurnFSM.ACTION_MOVE_ASSET:
                 imgui.text("MOVE ASSET:")
@@ -343,7 +357,7 @@ If an asset loses the Subtle or Stealth qualities while in a hostile location, t
 
                         # TODO(orkaboy): Dropdown list and move button for each asset?
                 if imgui.button("Done moving assets##Turn"):
-                    self.state = FactionTurn.TurnFSM.CHECK_GOAL
+                    self.state = FactionTurn.TurnFSM.POST_ACTION
 
             case FactionTurn.TurnFSM.ACTION_REPAIR_ASSET:
                 imgui.text("REPAIR ASSET:")
@@ -399,7 +413,7 @@ This ability can at the same time also be used to repair damage done to the fact
                     imgui.end_disabled()
 
                 if imgui.button("Done repairing##Turn"):
-                    self.state = FactionTurn.TurnFSM.CHECK_GOAL
+                    self.state = FactionTurn.TurnFSM.POST_ACTION
 
             case FactionTurn.TurnFSM.ACTION_EXPAND_INFLUENCE:
                 imgui.text("EXPAND INFLUENCE:")
@@ -451,7 +465,7 @@ If the Base of Influence survives this onslaught, it operates as normal and allo
                         )
                         for asset in rival_assets:
                             owner: Faction = None
-                            for faction in factions:
+                            for faction in self.turn_order:
                                 if faction.uuid == asset.owner:
                                     owner = faction
                                     break
@@ -486,7 +500,7 @@ If the Base of Influence survives this onslaught, it operates as normal and allo
                 LayoutHelper.add_spacer()
 
                 if imgui.button("Done building bases##Turn"):
-                    self.state = FactionTurn.TurnFSM.CHECK_GOAL
+                    self.state = FactionTurn.TurnFSM.POST_ACTION
 
             case FactionTurn.TurnFSM.ACTION_CREATE_ASSET:
                 imgui.text("CREATE ASSET:")
@@ -540,7 +554,7 @@ A faction can have no more Assets of a particular attribute than their attribute
                         )
                         faction.assets.append(new_asset)
                         self.asset_to_buy_loc.assets.append(new_asset)
-                        self.state = FactionTurn.TurnFSM.CHECK_GOAL
+                        self.state = FactionTurn.TurnFSM.POST_ACTION
                     if not can_buy:
                         imgui.end_disabled()
 
@@ -575,7 +589,7 @@ A faction can have no more Assets of a particular attribute than their attribute
                             LayoutHelper.add_tooltip("Cannot afford to add Stealth to asset.")
                             imgui.end_disabled()
                 if imgui.button("Done hiding##Turn"):
-                    self.state = FactionTurn.TurnFSM.CHECK_GOAL
+                    self.state = FactionTurn.TurnFSM.POST_ACTION
 
             case FactionTurn.TurnFSM.ACTION_SELL_ASSET:
                 imgui.text("SELL ASSET:")
@@ -597,7 +611,7 @@ A faction can have no more Assets of a particular attribute than their attribute
                 if rm_asset != -1:
                     faction.assets.pop(rm_asset)
                 if imgui.button("Done selling##Turn"):
-                    self.state = FactionTurn.TurnFSM.CHECK_GOAL
+                    self.state = FactionTurn.TurnFSM.POST_ACTION
             case _:
                 imgui.text("ERROR STATE")
 
@@ -637,7 +651,7 @@ A faction can have no more Assets of a particular attribute than their attribute
 
             # Execute main turn logic
             LayoutHelper.add_spacer()
-            self.turn_logic(factions)
+            self.turn_logic()
             LayoutHelper.add_spacer()
             _, faction.notes = imgui.input_text_multiline(
                 label=f"Faction Notes##Turn_{faction.uuid}", str=faction.notes
