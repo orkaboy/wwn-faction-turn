@@ -57,7 +57,6 @@ class FactionTurn:
         self.boi_hp: int = 0
 
     def _turn_active(self: Self) -> bool:
-        # TODO(orkaboy): Currently doesn't allow save/load durning a turn
         return self.turn_order is not None
 
     def turn_logic(self: Self, factions: list[Faction]) -> None:
