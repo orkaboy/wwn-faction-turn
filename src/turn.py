@@ -13,7 +13,7 @@ from src.faction import Faction
 from src.layout_helper import LayoutHelper
 from src.location import Location
 from src.style import STYLE
-from src.system import QUALITY, cunning_list, force_list, goals_list, wealth_list
+from src.system import QUALITY, MagicLevel, cunning_list, force_list, goals_list, wealth_list
 
 logger = logging.getLogger(__name__)
 
@@ -482,44 +482,17 @@ A faction can have no more Assets of a particular attribute than their attribute
                 )
                 if imgui.begin_combo(label="Set Goal##Turn", preview_value=f"{self.asset_to_buy}"):
                     imgui.text("=== CUNNING ===")
-                    for prototype in cunning_list():
-                        if faction.magic < prototype.requirements.magic_level:
-                            continue
-                        if faction.cunning < prototype.requirements.tier:
-                            continue
-                        _, selected = imgui.selectable(
-                            label=f"{prototype.strings.name}##Turn_buy",
-                            p_selected=False,
-                        )
-                        LayoutHelper.add_tooltip(prototype.strings.rules)
-                        if selected:
-                            self.asset_to_buy = prototype
+                    self._create_asset_combo_prototypes(
+                        proto_list=cunning_list(), magic=faction.magic, tier=faction.cunning
+                    )
                     imgui.text("=== FORCE ===")
-                    for prototype in force_list():
-                        if faction.magic < prototype.requirements.magic_level:
-                            continue
-                        if faction.force < prototype.requirements.tier:
-                            continue
-                        _, selected = imgui.selectable(
-                            label=f"{prototype.strings.name}##Turn_buy",
-                            p_selected=False,
-                        )
-                        LayoutHelper.add_tooltip(prototype.strings.rules)
-                        if selected:
-                            self.asset_to_buy = prototype
+                    self._create_asset_combo_prototypes(
+                        proto_list=force_list(), magic=faction.magic, tier=faction.force
+                    )
                     imgui.text("=== WEALTH ===")
-                    for prototype in wealth_list():
-                        if faction.magic < prototype.requirements.magic_level:
-                            continue
-                        if faction.wealth < prototype.requirements.tier:
-                            continue
-                        _, selected = imgui.selectable(
-                            label=f"{prototype.strings.name}##Turn_buy",
-                            p_selected=False,
-                        )
-                        LayoutHelper.add_tooltip(prototype.strings.rules)
-                        if selected:
-                            self.asset_to_buy = prototype
+                    self._create_asset_combo_prototypes(
+                        proto_list=wealth_list(), magic=faction.magic, tier=faction.wealth
+                    )
                     imgui.end_combo()
 
                 if imgui.begin_combo(
@@ -613,6 +586,22 @@ A faction can have no more Assets of a particular attribute than their attribute
                     self.state = FactionTurn.TurnFSM.CHECK_GOAL
             case _:
                 imgui.text("ERROR STATE")
+
+    def _create_asset_combo_prototypes(
+        self: Self, proto_list: list[AssetPrototype], magic: MagicLevel, tier: int
+    ) -> None:
+        for prototype in proto_list:
+            if magic < prototype.requirements.magic_level:
+                continue
+            if tier < prototype.requirements.tier:
+                continue
+            _, selected = imgui.selectable(
+                label=f"{prototype.strings.name}##Turn_buy",
+                p_selected=False,
+            )
+            LayoutHelper.add_tooltip(prototype.strings.rules)
+            if selected:
+                self.asset_to_buy = prototype
 
     def execute(self: Self, factions: list[Faction]) -> None:
         """Draw turn logic GUI."""
