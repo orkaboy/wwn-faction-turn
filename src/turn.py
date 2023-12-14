@@ -71,6 +71,11 @@ class FactionTurn:
         self.asset_to_buy_loc = None
         self.boi_loc = None
         self.boi_hp = 0
+        # Reset asset repair cost
+        if self.cur_faction < len(self.turn_order):
+            faction = self.turn_order[self.cur_faction]
+            for asset in faction.assets:
+                asset.repair_cost = 1
 
     def turn_logic(self: Self) -> None:
         """Execute turn logic according to the TurnFSM."""
@@ -363,6 +368,8 @@ If an asset loses the Subtle or Stealth qualities while in a hostile location, t
 This ability can at the same time also be used to repair damage done to the faction, spending 1 Treasure to heal a total equal to the faction's highest and lowest Force, Wealth, or Cunning attribute divided by two, rounded up. Thus, a faction with a Force of 5, Wealth of 2, and Cunning of 4 would heal 4 points of damage. Only one such application of healing is possible for a faction each turn."""  # noqa: E501
                 )
 
+                imgui.text(f"Current Treasure: {faction.treasure}")
+
                 for asset in faction.assets:
                     if not asset.is_initialized():
                         continue
@@ -371,16 +378,19 @@ This ability can at the same time also be used to repair damage done to the fact
                     if not full_hp:
                         asset.render_brief()
                         imgui.same_line()
+                        imgui.text(f"HP: {asset.hp}/{asset.max_hp()}")
+                        imgui.same_line()
                         attribute = faction.get_attribute(asset.prototype.type)
                         repair_amount = ceil(attribute / 2)
-                        # TODO(orkaboy): Multiple repairs cost more during same turn!
-                        repair_cost = 1
+                        repair_cost = asset.repair_cost
                         disabled = faction.treasure < repair_cost
                         if disabled:
                             imgui.begin_disabled()
                         if imgui.button(label=f"Repair##{asset.uuid}"):
                             faction.treasure -= repair_cost
                             asset.hp = min(asset.max_hp(), asset.hp + repair_amount)
+                            # Multiple repairs cost more during same turn!
+                            asset.repair_cost += 1
                         LayoutHelper.add_tooltip(
                             f"Repair up to {repair_amount} HP on Asset for {repair_cost} Treasure"
                         )

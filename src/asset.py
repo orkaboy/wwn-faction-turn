@@ -27,6 +27,8 @@ class Asset:
         self.loc = loc
         self.qualities: list[Quality] = []
         self.init_from_prototype(prototype)
+        # Temporary stats
+        self.repair_cost = 1
 
     def is_initialized(self: Self) -> bool:
         return isinstance(self.prototype, AssetPrototype)

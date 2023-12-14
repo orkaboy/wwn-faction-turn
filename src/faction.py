@@ -135,7 +135,8 @@ class Faction:
         upkeep = 0
         # Sum up cost of assets
         for asset in self.assets:
-            upkeep += asset.prototype.upkeep()
+            if asset.is_initialized():
+                upkeep += asset.prototype.upkeep()
         return upkeep
 
     def asset_excess(self: Self, asset_type: AssetType) -> int:
