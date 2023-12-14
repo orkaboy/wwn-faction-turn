@@ -182,13 +182,10 @@ class FactionTurn:
                     self.state = FactionTurn.TurnFSM.ACTION_MOVE_ASSET
                 if no_assets:
                     LayoutHelper.add_tooltip("No assets to move.")
-
-                if imgui.button("Repair Asset"):
-                    self.state = FactionTurn.TurnFSM.ACTION_REPAIR_ASSET
-
-                if no_assets:
-                    LayoutHelper.add_tooltip("No assets to repair.")
                     imgui.end_disabled()
+
+                if imgui.button("Repair Asset/Faction"):
+                    self.state = FactionTurn.TurnFSM.ACTION_REPAIR_ASSET
 
                 if imgui.button("Expand Influence"):
                     self.state = FactionTurn.TurnFSM.ACTION_EXPAND_INFLUENCE
@@ -395,8 +392,9 @@ This ability can at the same time also be used to repair damage done to the fact
                 low_attr = min(faction.cunning, faction.force, faction.wealth)
                 repair_amount = ceil((high_attr + low_attr) / 2)
                 repair_cost = 1
-                # TODO(orkaboy): Only available once per turn
+                # Only available once per turn
                 disabled = faction.treasure < repair_cost
+                imgui.text(f"Faction HP: {faction.hp}/{faction.max_hp()}")
                 if self.repaired_faction:
                     imgui.text("(Repairing faction is only available once per turn)")
                     disabled = True
