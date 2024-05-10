@@ -77,6 +77,7 @@ class FactionTurn:
             for asset in faction.assets:
                 asset.repair_cost = 1
                 asset.move_target = None
+            logger.info(f"  --- TURN {self.turn_idx} for {faction.name} ---")
 
     def turn_logic(self: Self, locations: list[Location]) -> None:
         """Execute turn logic according to the TurnFSM."""
@@ -112,6 +113,9 @@ class FactionTurn:
                 if imgui.button("Apply treasure gain"):
                     faction.treasure += treasure_gain
                     self.state = FactionTurn.TurnFSM.PAY_UPKEEP
+                    logger.debug(
+                        f"    Gained {treasure_gain} Treasure. New total is {faction.treasure}."
+                    )
 
             case FactionTurn.TurnFSM.PAY_UPKEEP:
                 imgui.text_wrapped(
@@ -144,6 +148,8 @@ class FactionTurn:
                 if imgui.button("Pay upkeep"):
                     faction.treasure = max(0, faction.treasure - total_upkeep)
                     self.state = FactionTurn.TurnFSM.SPECIAL_ABILITIES
+                    if total_upkeep > 0:
+                        logger.debug(f"    Paid {total_upkeep} Treasure in upkeep/excess assets.")
 
             case FactionTurn.TurnFSM.SPECIAL_ABILITIES:
                 imgui.text_wrapped(
@@ -237,6 +243,7 @@ class FactionTurn:
                     self.state = FactionTurn.TurnFSM.MAIN_ACTION
                 if imgui.button(label="Done##Action"):
                     self.state = FactionTurn.TurnFSM.POST_ACTION
+                    logger.info(f"    Main action: {self.state.name}")
 
             case FactionTurn.TurnFSM.POST_ACTION:
                 faction.goal_change_paralysis = False
@@ -255,6 +262,7 @@ class FactionTurn:
                     if imgui.button("Complete goal"):
                         faction.exp += faction.goal.difficulty
                         faction.goal = None
+                        logger.info("    Completed faction goal.")
                 elif imgui.begin_combo(label="Set Goal##Turn", preview_value="Set faction goal"):
                     for goal in goals_list():
                         _, selected = imgui.selectable(
@@ -270,6 +278,7 @@ class FactionTurn:
                     # Mark as paralyzed next turn
                     faction.goal_change_paralysis = True
                     faction.goal = None
+                    logger.info("    Aborted faction goal (no main action next turn).")
                 STYLE.pop_color()
 
                 LayoutHelper.add_spacer()
@@ -704,5 +713,6 @@ A faction can have no more Assets of a particular attribute than their attribute
             )
             self.state = FactionTurn.TurnFSM.IDLE
             self.turn_idx += 1
+            logger.info(f"=== TURN {self.turn_idx} START ===")
 
         imgui.end()
