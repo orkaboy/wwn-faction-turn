@@ -70,7 +70,7 @@ class Massive(TagPrototype):
         super().__init__(
             ident="t_massive",
             name="Massive",
-            rules="he faction is an empire, major kingdom, or other huge organizational edifice. It automatically wins attribute checks if its attribute is more than twice as big as the opposing side’s attribute, unless the other side is also Massive.",  # noqa: E501
+            rules="The faction is an empire, major kingdom, or other huge organizational edifice. It automatically wins attribute checks if its attribute is more than twice as big as the opposing side’s attribute, unless the other side is also Massive.",  # noqa: E501
         )
 
 

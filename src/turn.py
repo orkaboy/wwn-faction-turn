@@ -679,40 +679,43 @@ A faction can have no more Assets of a particular attribute than their attribute
         imgui.set_window_size(imgui.ImVec2(240, 410), cond=imgui.Cond_.first_use_ever)
 
         imgui.text(f"Turn {self.turn_idx}")
-        if self._turn_active():
-            # Print out the turn order and progress
-            imgui.text("TURN ORDER:")
-            for idx, faction in enumerate(self.turn_order):
-                if idx == self.cur_faction:
-                    imgui.text(f"{faction.initiative}: {faction.name} (CURRENT)")
-                else:
-                    imgui.text(f"{faction.initiative}: {faction.name}")
+        if factions:
+            if self._turn_active():
+                # Print out the turn order and progress
+                imgui.text("TURN ORDER:")
+                for idx, faction in enumerate(self.turn_order):
+                    if idx == self.cur_faction:
+                        imgui.text(f"{faction.initiative}: {faction.name} (CURRENT)")
+                    else:
+                        imgui.text(f"{faction.initiative}: {faction.name}")
 
-            # Execute main turn logic
-            LayoutHelper.add_spacer()
-            self.turn_logic(locations)
-            LayoutHelper.add_spacer()
-            _, faction.notes = imgui.input_text_multiline(
-                label=f"Faction Notes##Turn_{faction.uuid}", str=faction.notes
-            )
+                # Execute main turn logic
+                LayoutHelper.add_spacer()
+                self.turn_logic(locations)
+                LayoutHelper.add_spacer()
+                _, faction.notes = imgui.input_text_multiline(
+                    label=f"Faction Notes##Turn_{faction.uuid}", str=faction.notes
+                )
 
-            # End turn, next faction etc.
-            STYLE.button_color(STYLE.COL_RED)
-            if imgui.button("Skip faction"):
-                self.state = FactionTurn.TurnFSM.NEXT_FACTION
-            if imgui.button("Abort Turn"):
-                # TODO(orkaboy): Currently doesn't rollback changes made
-                self.turn_order = None
+                # End turn, next faction etc.
+                STYLE.button_color(STYLE.COL_RED)
+                if imgui.button("Skip faction"):
+                    self.state = FactionTurn.TurnFSM.NEXT_FACTION
+                if imgui.button("Abort Turn"):
+                    # TODO(orkaboy): Currently doesn't rollback changes made
+                    self.turn_order = None
+                    self.state = FactionTurn.TurnFSM.IDLE
+                STYLE.pop_color()
+            elif imgui.button("New Turn"):
+                for faction in factions:
+                    faction.roll_initiative()
+                self.turn_order = sorted(
+                    factions.copy(), key=lambda faction: faction.initiative, reverse=True
+                )
                 self.state = FactionTurn.TurnFSM.IDLE
-            STYLE.pop_color()
-        elif imgui.button("New Turn"):
-            for faction in factions:
-                faction.roll_initiative()
-            self.turn_order = sorted(
-                factions.copy(), key=lambda faction: faction.initiative, reverse=True
-            )
-            self.state = FactionTurn.TurnFSM.IDLE
-            self.turn_idx += 1
-            logger.info(f"=== TURN {self.turn_idx} START ===")
+                self.turn_idx += 1
+                logger.info(f"=== TURN {self.turn_idx} START ===")
+        else:
+            imgui.text("Create factions to start a turn.")
 
         imgui.end()
