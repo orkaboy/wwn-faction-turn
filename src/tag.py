@@ -1,18 +1,26 @@
 from typing import Self
 
 from imgui_bundle import imgui
+from yamlable import YamlAble, yaml_info
 
 from src.layout_helper import LayoutHelper
 from src.system.tags import TagPrototype, tags_list
 
 
-class Tag:
+@yaml_info(yaml_tag_ns="wwn")
+class Tag(YamlAble):
     def __init__(
         self: Self,
-        prototype: TagPrototype,
+        prototype: TagPrototype | str,
     ) -> None:
         """Initialize Tag object."""
         self.prototype = prototype
+
+    def __to_yaml_dict__(self: Self) -> dict:
+        prototype: str = self.prototype.ident if self.prototype else None
+        return {
+            "prototype": prototype,  # Note: needs to be restored
+        }
 
     def render(self: Self, idx: str) -> None:
         """Render Tag in GUI."""

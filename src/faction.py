@@ -4,6 +4,7 @@ from typing import Self
 from uuid import uuid4
 
 from imgui_bundle import imgui
+from yamlable import YamlAble, yaml_info
 
 from src.asset import Asset
 from src.base_of_influence import BaseOfInfluence
@@ -15,7 +16,8 @@ from src.system import AssetType, MagicLevel, goals_list
 from src.tag import Tag
 
 
-class Faction:
+@yaml_info(yaml_tag_ns="wwn")
+class Faction(YamlAble):
     MAX_ATTRIBUTE: int = 8
 
     # Cost in exp to raise an attribute level
@@ -35,34 +37,76 @@ class Faction:
         self: Self,
         uuid: str,
         name: str,
+        desc: str = "",
         cunning: int = 1,
         force: int = 1,
         wealth: int = 1,
-        magic: MagicLevel = MagicLevel.NONE,
+        magic: int = 0,
+        exp: int = 0,
+        treasure: int = 0,
+        hp: int = None,
+        initiative: int = 0,
+        goal: Goal = None,
+        notes: str = "",
+        assets: list[Asset] = None,
+        bases: list[BaseOfInfluence] = None,
+        tags: list[Tag] = None,
+        goal_change_paralysis: bool = False,
     ) -> None:
         """Initialize Faction object."""
         self.name = name
-        self.desc: str = ""
+        self.desc: str = desc
         self.uuid: str = uuid
         # Main faction attributes
         self.cunning: int = cunning
         self.force: int = force
         self.wealth: int = wealth
-        self.magic: MagicLevel = magic
+        self.magic: MagicLevel = MagicLevel.NONE
+        if magic:
+            self.magic = MagicLevel(magic)
         # Secondary faction attributes
-        self.exp: int = 0
-        self.treasure: int = 0
-        self.hp: int = self.max_hp()
-        self.initiative: int = 0
-        self.goal: Goal = None
-        self.notes: str = ""
+        self.exp: int = exp
+        self.treasure: int = treasure
+        self.hp: int = hp
+        if hp is None:
+            self.hp: int = self.max_hp()
+        self.initiative: int = initiative
+        self.goal: Goal = goal
+        self.notes: str = notes
         # Asset tracking
-        self.assets: list[Asset] = []
-        self.bases: list[BaseOfInfluence] = []
+        self.assets: list[Asset] = assets
+        if assets is None:
+            self.assets = []
+        self.bases: list[BaseOfInfluence] = bases
+        if bases is None:
+            self.bases = []
         # Tags tracking
-        self.tags: list[Tag] = []
+        self.tags: list[Tag] = tags
+        if tags is None:
+            self.tags = []
         # Temporary variables
-        self.goal_change_paralysis = False
+        self.goal_change_paralysis = goal_change_paralysis
+
+    def __to_yaml_dict__(self: Self) -> dict:
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "desc": self.desc,
+            "cunning": self.cunning,
+            "force": self.force,
+            "wealth": self.wealth,
+            "magic": self.magic.value,
+            "exp": self.exp,
+            "treasure": self.treasure,
+            "hp": self.hp,
+            "initiative": self.initiative,
+            "goal": self.goal,
+            "notes": self.notes,
+            "assets": self.assets,
+            "bases": self.bases,
+            "tags": self.tags,
+            "goal_change_paralysis": self.goal_change_paralysis,
+        }
 
     def __repr__(self: Self) -> str:
         return self.name

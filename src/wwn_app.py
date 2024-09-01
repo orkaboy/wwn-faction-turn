@@ -11,7 +11,8 @@ from src.base_of_influence import BaseOfInfluence
 from src.faction import Faction
 from src.layout_helper import LayoutHelper
 from src.location import Location
-from src.system import QUALITY
+from src.quality import Quality
+from src.system import QUALITY, quality_list, tags_list
 from src.turn import FactionTurn
 
 logger = logging.getLogger(__name__)
@@ -44,15 +45,78 @@ class WwnApp(App):
     def open_project(self: Self) -> None:
         """Load project from file."""
         project_data = open_yaml(self.project_filename)
-        # TODO(orkaboy): Handle empty file and missing data
-        # TODO(orkaboy): Parse from data
-        self.factions = project_data.get("factions", [])
-        self.locations = project_data.get("locations", [])
-        self.turn = project_data.get("turn", FactionTurn())
+        if project_data:
+            self.factions: list[Faction] = project_data.get("factions", [])
+            self.locations: list[Location] = project_data.get("locations", [])
+            self.turn: FactionTurn = project_data.get("turn", FactionTurn())
+
+            self.restore_links()
+
+    def restore_links(self: Self) -> None:
+        # Restore links to objects using uuid and ident strings
+        for faction in self.factions:
+            # BoI locations
+            for base in faction.bases:
+                for location in self.locations:
+                    if base.location == location.uuid:
+                        base.location = location
+                        break
+            # Tags (from prototype)
+            for tag in faction.tags:
+                if tag.prototype:  # Note, can be None
+                    for prototype in tags_list():
+                        if tag.prototype == prototype.id:
+                            tag.prototype = prototype
+                            break
+            # Assets (from prototype)
+            for asset in faction.assets:
+                # Qualities set on assets
+                qualities: list[Quality] = []
+                for q in asset.qualities:
+                    for prototype in quality_list():
+                        if q == prototype.id:
+                            qualities.append(prototype)
+                asset.qualities = qualities
+                # Asset location
+                if asset.loc:
+                    for location in self.locations:
+                        if asset.loc == location.uuid:
+                            asset.loc = location
+                            break
+
+        # Faction turn order
+        if self.turn.turn_order:
+            factions: list[Faction] = []
+            for faction_id in self.turn.turn_order:
+                for faction in self.factions:
+                    if faction_id == faction.uuid:
+                        factions.append(faction)
+                        break
+                else:
+                    # TODO(orkaboy): Exception
+                    pass
+            self.turn.turn_order = factions
+        # Location references
+        for location in self.locations:
+            assets: list[Asset] = []
+            for asset_id in location.assets:
+                for faction in self.factions:
+                    for asset in faction.assets:
+                        if asset_id == asset.uuid:
+                            assets.append(asset)
+                            # TODO(orkaboy): Exception on outer for loop?
+            location.assets = assets
+            bases: list[BaseOfInfluence] = []
+            for boi_id in location.bases:
+                for faction in self.factions:
+                    for boi in faction.bases:
+                        if boi_id == boi.uuid:
+                            bases.append(boi)
+                            # TODO(orkaboy): Exception on outer for loop?
+            location.bases = bases
 
     def save_project(self: Self) -> None:
         """Save project to file."""
-        # TODO(orkaboy): Fill in correct data
         data = {
             "factions": self.factions,
             "locations": self.locations,

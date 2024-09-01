@@ -53,5 +53,5 @@ class QUALITY:
 _quality = get_class_values(QUALITY)
 
 
-def quality_list() -> list[QUALITY]:
+def quality_list() -> list[Quality]:
     return _quality

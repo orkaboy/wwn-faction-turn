@@ -1,6 +1,7 @@
 from typing import Self
 
 from imgui_bundle import imgui
+from yamlable import YamlAble, yaml_info
 
 from src.layout_helper import LayoutHelper
 from src.location import Location
@@ -9,27 +10,59 @@ from src.style import STYLE
 from src.system import QUALITY, AssetPrototype, AssetType, cunning_list, force_list, wealth_list
 
 
-class Asset:
+@yaml_info(yaml_tag_ns="wwn")
+class Asset(YamlAble):
     def __init__(
         self: Self,
-        prototype: AssetPrototype | AssetType,
+        prototype: AssetPrototype | AssetType | int,
         owner: str,
         uuid: str,
         loc: Location = None,
+        hp: int = 0,
+        qualities: list[Quality] = None,
+        desc: str = "",
     ) -> None:
         """Instantiate Asset object."""
         # Variable stats
-        self.desc: str = ""
-        self.owner = owner
         self.uuid = uuid
+        self.owner = owner
+        self.desc = desc
         self.prototype = prototype
-        self.hp = 0
+        if isinstance(prototype, int):
+            self.prototype = AssetType(prototype)
+        # Restore from str
+        elif isinstance(prototype, str):
+            for c in cunning_list():
+                if prototype == c.strings.id:
+                    self.prototype = c
+            for f in force_list():
+                if prototype == f.strings.id:
+                    self.prototype = f
+            for w in wealth_list():
+                if prototype == w.strings.id:
+                    self.prototype = w
+        self.hp = hp
         self.loc = loc
-        self.qualities: list[Quality] = []
-        self.init_from_prototype(prototype)
-        # Temporary stats
+        self.qualities: list[Quality] = qualities
+        if qualities is None:
+            self.qualities = []
+        self.init_from_prototype(self.prototype)
+        # Temporary stats (note, not saved)
         self.repair_cost = 1
         self.move_target: Location = None
+
+    def __to_yaml_dict__(self: Self) -> dict:
+        prototype = self.prototype.strings.id if self.is_initialized() else self.prototype.value
+        loc = self.loc.uuid if self.loc else self.loc
+        return {
+            "uuid": self.uuid,
+            "owner": self.owner,
+            "desc": self.desc,
+            "prototype": prototype,
+            "hp": self.hp,
+            "qualities": [q.id for q in self.qualities],
+            "loc": loc,
+        }
 
     def is_initialized(self: Self) -> bool:
         return isinstance(self.prototype, AssetPrototype)

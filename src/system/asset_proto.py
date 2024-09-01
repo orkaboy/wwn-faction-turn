@@ -1,5 +1,4 @@
 from enum import Enum, auto
-from functools import total_ordering
 from typing import Self
 
 from src.quality import Quality
@@ -13,7 +12,6 @@ class AssetType(Enum):
     WEALTH = auto()
 
 
-@total_ordering
 class MagicLevel(Enum):
     """MagicLevel enumeration."""
 

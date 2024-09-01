@@ -6,6 +6,7 @@ from typing import Self
 from uuid import uuid4
 
 from imgui_bundle import imgui
+from yamlable import YamlAble, yaml_info
 
 from src.asset import Asset, AssetPrototype, AssetType
 from src.base_of_influence import BaseOfInfluence
@@ -18,7 +19,8 @@ from src.system import QUALITY, MagicLevel, cunning_list, force_list, goals_list
 logger = logging.getLogger(__name__)
 
 
-class FactionTurn:
+@yaml_info(yaml_tag_ns="wwn")
+class FactionTurn(YamlAble):
     """Worlds Without Number turn logic code."""
 
     HIDE_ACTION_CUNNING_REQUIREMENT = 3
@@ -45,20 +47,39 @@ class FactionTurn:
         POST_ACTION = auto()
         CHECK_GOAL = auto()
 
-    def __init__(self: Self) -> None:
+    def __init__(
+        self: Self,
+        turn_idx: int = 0,
+        cur_faction: int = 0,
+        turn_order: list[Faction | str] = None,
+        state: int = None,
+    ) -> None:
         """Initialize FactionTurn object."""
         # Turn counter
-        self.turn_idx: int = 0
+        self.turn_idx: int = turn_idx
         # Turn variables
-        self.turn_order: list[Faction] = None
-        self.cur_faction: int = 0
+        self.turn_order: list[Faction] = turn_order
+        self.cur_faction: int = cur_faction
         self.state: FactionTurn.TurnFSM = FactionTurn.TurnFSM.IDLE
-        # Temp choice variables
+        if state:
+            self.state = FactionTurn.TurnFSM(state)
+        # Temp choice variables (note, not saved)
         self.asset_to_buy: AssetPrototype = None
         self.asset_to_buy_loc: Location = None
         self.boi_loc: Location = None
         self.boi_hp: int = 0
         self.repaired_faction: bool = False
+
+    def __to_yaml_dict__(self: Self) -> dict:
+        turn_order: list[str] = None
+        if self.turn_order:
+            turn_order = [faction.uuid for faction in self.turn_order]
+        return {
+            "turn_idx": self.turn_idx,
+            "turn_order": turn_order,
+            "cur_faction": self.cur_faction,
+            "state": self.state.value,
+        }
 
     def _turn_active(self: Self) -> bool:
         return self.turn_order is not None
